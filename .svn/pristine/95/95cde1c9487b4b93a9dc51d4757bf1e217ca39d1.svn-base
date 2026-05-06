@@ -1,0 +1,11 @@
+package exceptions;
+
+//Exception falls eine Kante nicht richtig konfiguriert wurde
+public class UngültigeKanteException extends RuntimeException{
+	private static final long serialVersionUID = 1L;
+
+	public UngültigeKanteException(String id) {
+		super("Kante mit ID: " + id + " ist ungültig!");
+	}
+
+}

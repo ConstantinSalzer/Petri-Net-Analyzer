@@ -1,0 +1,9 @@
+package datenstruktur;
+
+public class EGKnoten extends Knoten{
+	
+	public EGKnoten(String id) {
+		super(id);
+		super.setName(id);
+	}
+}

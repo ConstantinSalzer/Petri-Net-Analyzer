@@ -1,0 +1,13 @@
+package datenstruktur;
+
+//Diese Klasse implementiert Knoten in Erreichbarkeitsgraphen und erbt dafür von der Klasse Knoten
+
+public class EGKnoten extends Knoten{
+	
+	//Konstruktor mit der Objekte dieser Klasse erzeugt werden
+	
+	public EGKnoten(String id) {
+		super(id);
+		super.setName(id);
+	}
+}

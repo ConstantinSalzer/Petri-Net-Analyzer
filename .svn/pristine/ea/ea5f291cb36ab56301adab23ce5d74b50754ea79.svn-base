@@ -1,0 +1,79 @@
+package datenstruktur_Petrinetz;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Petrinetz {
+	public HashMap<String, Transition> Transitionen;
+	public HashMap<String, Stelle> Stellen;
+	public HashMap<String, Kante> Kanten;
+	
+	public Petrinetz() {
+		this.Transitionen = new HashMap<String, Transition>();
+		this.Stellen = new HashMap<String, Stelle>();
+		this.Kanten = new HashMap<String, Kante>();
+	}
+	
+	void addTransition(Transition transition) {
+		Transitionen.put(transition.id, transition);
+	}
+	
+	void addStelle(Stelle stelle) {
+		Stellen.put(stelle.id, stelle);
+	}
+	
+	void addKanten(Kante kante) {
+		Kanten.put(kante.id, kante);
+	}
+	
+	public void transitionSchalten (String id) {
+		Transition transition = Transitionen.get(id);
+		if (!transition.istAktiviert()) {
+			System.out.println("Transition muss aktiviert sein!");
+		} else {
+			for (Kante kante: Kanten.values()) {
+				if (kante.transition.equals(transition)) {
+					if (kante.stelleIstQuelle) {
+						kante.stelle.verringereMarkenzahl();
+					} else {
+						kante.stelle.erhöheMarkenzahl();
+					}
+				}
+			}
+		}
+	}
+	
+	public void überprüfeAktivierbarkeit() {
+		Map<Transition, Boolean> aktivierbarkeit = new HashMap<>();
+		
+		for (Transition transition: Transitionen.values()) {
+			aktivierbarkeit.put(transition, true);
+		}
+		
+		for (Kante kante : Kanten.values()) {
+	        if (kante.stelleIstQuelle()) {
+	            if (kante.getStelle().getMarkenzahl() <= 0) {
+	                aktivierbarkeit.put(kante.getTransition(), false);
+	            }
+	        }
+	    }
+		
+		 for (Map.Entry<Transition, Boolean> entry : aktivierbarkeit.entrySet()) {
+		        if (entry.getValue()) {
+		            entry.getKey().aktiviere();
+		        } else {
+		            entry.getKey().deaktiviere();
+		        }
+		 }
+	}
+	public void setzeAnfangsmarkierung() {
+		for (Stelle stelle: Stellen.values()) {
+			stelle.setzeAnfangsmarkierung();
+		}
+	}
+	
+	public void zuruckzurAnfangsmarkierung() {
+		for (Stelle stelle: Stellen.values()) {
+			stelle.zuruckzurAnfangsmarkierung();
+		}
+	}
+}

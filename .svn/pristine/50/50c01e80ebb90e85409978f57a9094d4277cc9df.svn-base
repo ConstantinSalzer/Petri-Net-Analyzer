@@ -1,0 +1,101 @@
+package GUI;
+
+
+import org.graphstream.graph.Edge;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.ui.spriteManager.Sprite;
+import org.graphstream.ui.spriteManager.SpriteManager;
+
+import datenstruktur.EGKante;
+import datenstruktur.EGKnoten;
+import datenstruktur.pEG;
+
+public class ErreichbarkeitsGraf extends MultiGraph{
+	
+	private static String CSS_FILE = "url(" + PetriGraf.class.getResource("/graph.css") + ")";
+	private pEG peg;
+	private SpriteManager spriteMan;
+	
+	public ErreichbarkeitsGraf(pEG peg) {
+		super("pEG");
+		spriteMan = new SpriteManager(this);
+		this.peg = peg;
+		this.setAttribute("ui.stylesheet", CSS_FILE);
+	}
+	void initilisiere() {
+		Node node = this.addNode(peg.anfangsKnoten.getId());
+		node.setAttribute("ui.class", "markierterAnfangsKnotenEG");
+		node.setAttribute("ui.label", peg.anfangsKnoten.getName());
+	}
+	
+	void updateGraf(String transition, String aktuelleMarkierung, boolean knotenKantenMarkierung, boolean unbeschraenktheitMarkierung) {
+		for (EGKnoten knoten: peg.egKnoten.values()) {
+			if (this.getNode(knoten.getId())== null) {
+				Node node = this.addNode(knoten.getId());
+				node.setAttribute("ui.label", knoten.getName());
+			}
+		}
+		for (EGKante kante: peg.egKanten.values()) {
+			if (this.getEdge(kante.getId())== null) {
+				Edge edge = this.addEdge(kante.getId(), this.getNode(kante.getQuellID()),this.getNode(kante.getZielID()), true);
+				Sprite sprite = spriteMan.addSprite(kante.getId());
+				sprite.attachToEdge(edge.getId());
+				sprite.setPosition(0.5);
+				sprite.setAttribute("ui.class", "edgeLabel");
+				sprite.setAttribute("ui.label", kante.getKantenBeschriftung());
+			}
+		}
+		if (knotenKantenMarkierung) {
+			this.markiereKnoten(aktuelleMarkierung);
+			
+			this.edges().forEach(edge -> {
+				if (edge.getId().contains(transition) && edge.getId().endsWith(aktuelleMarkierung)) {
+					this.getEdge(edge.getId()).setAttribute("ui.class", "fett");
+				}
+			});
+		}
+		if (unbeschraenktheitMarkierung) {
+			this.nodes().forEach(node -> {
+				if(node.getId().equals(peg.anfangsKnoten.getId())) {
+					if (node.getId().equals(peg.m.getId()) || node.getId().equals(peg.mm.getId())) {
+						node.setAttribute("ui.class","markierterAnfangsKnotenEG");
+					} else {
+						node.setAttribute("ui.class", "anfangsKnotenEG");
+					}
+				} else {
+					if (node.getId().equals(peg.m.getId()) || node.getId().equals(peg.mm.getId())) {
+						node.setAttribute("ui.class", "markierterKnotenEG");
+					} else {
+						node.setAttribute("ui.class", "node");
+					}
+				}
+			});
+			this.edges().forEach(edge -> {
+				if (peg.pfadmmm.contains(edge.getId())) {
+					this.getEdge(edge.getId()).setAttribute("ui.class", "fett");
+				}
+			});
+		}
+	}
+	
+	void markiereKnoten(String id) {
+		this.nodes().forEach(node -> {
+			if(node.getId().equals(peg.anfangsKnoten.getId())) {
+				node.setAttribute("ui.class", "anfangsKnotenEG");
+			} else {
+				node.setAttribute("ui.class", "node");
+			}
+			if(id.equals(peg.anfangsKnoten.getId())) {
+				this.getNode(id).setAttribute("ui.class", "markierterAnfangsKnotenEG");
+			} else {
+				this.getNode(id).setAttribute("ui.class", "markierterKnotenEG");
+			}
+		});
+		
+
+		this.edges().forEach(edge -> {
+			this.getEdge(edge.getId()).setAttribute("ui.class", "edge");
+		}); 
+	}
+}

@@ -1,0 +1,140 @@
+package GUI;
+
+import org.graphstream.graph.Edge;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.ui.spriteManager.Sprite;
+import org.graphstream.ui.spriteManager.SpriteManager;
+
+import datenstruktur.PetrinetzKante;
+import datenstruktur.Petrinetz;
+import datenstruktur.Stelle;
+import datenstruktur.Transition;
+
+public class PetriGraf extends MultiGraph{
+
+	private static String CSS_FILE = "url(" + PetriGraf.class.getResource("/graph.css") + ")";
+	private Petrinetz petrinetz;
+	public boolean stelleAngeklickt;
+	public Stelle angeklickteStelle;
+	private SpriteManager spriteMan;
+	
+	
+	public PetriGraf(Petrinetz petrinetz) {
+		super ("PetriGraf");
+		this.petrinetz=petrinetz;
+		this.setAttribute("ui.stylesheet", CSS_FILE);
+		spriteMan = new SpriteManager(this);
+		for (Transition transition: petrinetz.Transitionen.values()) {
+			Node node = this.addNode(transition.getId());
+			transitionenStilSetzen(node);
+			node.setAttribute("ui.label", "[" + transition.getId() + "]" + " " + transition.getName());
+			node.setAttribute("xy",transition.getPosition().getXposition(), transition.getPosition().getYposition());
+		}
+		for (Stelle stelle: petrinetz.Stellen.values()) {
+			Node node = this.addNode(stelle.getId());
+			node.setAttribute("ui.label","[" + stelle.getId() + "]" + " " + stelle.getName() + " <" + stelle.getMarkenzahl()+">");
+			node.setAttribute("xy",stelle.getPosition().getXposition(),stelle.getPosition().getYposition());
+			stellenStilSetzen(node, false);
+		}
+		
+		for (PetrinetzKante kante: petrinetz.Kanten.values()) {
+			if (kante.stelleIstQuelle()) {
+				Edge edge = this.addEdge(kante.getId(), kante.getStelle().getId(), kante.getTransition().getId(), true);
+				Sprite sprite = spriteMan.addSprite(kante.getId());
+				sprite.attachToEdge(edge.getId());
+				sprite.setPosition(0.5);
+				sprite.setAttribute("ui.class", "edgeLabel");
+				sprite.setAttribute("ui.label", "[" + kante.getId() + "]");
+			} else {
+				Edge edge = this.addEdge(kante.getId(), kante.getTransition().getId(), kante.getStelle().getId(), true);
+				Sprite sprite = spriteMan.addSprite(kante.getId());
+				sprite.attachToEdge(edge.getId());
+				sprite.setPosition(0.5);
+				sprite.setAttribute("ui.class", "edgeLabel");
+				sprite.setAttribute("ui.label", "[" + kante.getId() + "]");
+			}
+		}
+	}
+	
+	public void transitionGedruckt(String id) {
+		petrinetz.transitionSchalten(id);
+		this.erneuereKnotenStil();
+	}
+	
+	public void stelleGedruckt(String id, boolean bleibtAngeklickt) {
+		Node node = this.getNode(id);
+		if (petrinetz.Stellen.containsKey(id)) {
+			if (stelleAngeklickt) {
+				if (id.equals(angeklickteStelle.getId())) {
+					if (bleibtAngeklickt) {
+						stellenStilSetzen(node,true);
+					} else {
+						stellenStilSetzen(node,false);
+						stelleAngeklickt= false;
+						angeklickteStelle = null;
+					}
+				} else {
+					Node node2 = this.getNode(angeklickteStelle.getId());
+					stellenStilSetzen(node2, false);
+					stellenStilSetzen(node, true);
+					angeklickteStelle = petrinetz.Stellen.get(node.getId());
+				}
+			} else {
+				stellenStilSetzen(node, true);
+				stelleAngeklickt = true;
+				angeklickteStelle = petrinetz.Stellen.get(node.getId());
+			}			
+		}
+	}
+	
+	private void stellenStilSetzen (Node node, boolean gedruckt) {
+		Stelle stelle = petrinetz.Stellen.get(node.getId());
+		
+		int markenzahl = stelle.getMarkenzahl();
+		String farbe = gedruckt ? "blue" : "black";
+		int breite = gedruckt ? 5 : 1;
+		
+		if (markenzahl > 0) {
+			if (markenzahl > 9) markenzahl = 10;
+			node.setAttribute("ui.style",
+					"stroke-mode: plain; " +
+					"stroke-color: " +farbe + "; " +
+					"stroke-width: " +breite +"px; " +
+					"fill-mode: image-scaled; " +
+					"fill-image: url('resources/Bilder/" + markenzahl + ".png');"
+			);
+		} else {
+			node.setAttribute("ui.style", 
+					"stroke-mode: plain; " +
+					"stroke-color: " + farbe + "; " +
+					"stroke-width: " + breite + "px;" +
+					"fill-mode: plain; " +
+					"fill-color: white;"
+			);
+		}
+	}
+	
+	private void transitionenStilSetzen(Node node) {
+		if (!petrinetz.Transitionen.containsKey(node.getId())) {
+			System.out.println("Bitte eine Transition als Knoten übergeben");
+		} else {
+			Transition transition = petrinetz.Transitionen.get(node.getId());
+			if (transition.istAktiviert()) {
+				node.setAttribute("ui.class", "TransitionAktiviert");
+			} else {
+				node.setAttribute("ui.class", "Transition");
+			}
+		}
+	}
+	
+	public void erneuereKnotenStil() {
+		petrinetz.überprüfeAktivierbarkeit();
+		for (Transition transition: petrinetz.Transitionen.values()) {
+			transitionenStilSetzen(this.getNode(transition.getId()));
+		}
+		for (Stelle stelle: petrinetz.Stellen.values()) {
+			stellenStilSetzen(this.getNode(stelle.getId()), false);
+		}
+	}
+}

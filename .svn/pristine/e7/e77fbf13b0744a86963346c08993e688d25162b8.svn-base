@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"Alle Packages","u":"allpackages-index.html"},{"l":"datenstruktur"},{"l":"exceptions"},{"l":"GUI"},{"l":"Petrinets_3756556_Salzer_Constantin"}];updateSearchResults();

@@ -1,0 +1,36 @@
+import java.io.File;
+
+import propra.pnml.PNMLWopedParser;
+
+public class SpecializedPNMLParser extends PNMLWopedParser{
+	
+	
+	public static void main(final String[] args) {
+		if (args.length > 0) {
+			File pnmlDatei = new File(args[0]);
+			if (pnmlDatei.exists()) {
+				SpecializedPNMLParser speziellerpnmlParser = new SpecializedPNMLParser(pnmlDatei);
+				speziellerpnmlParser.initParser();
+				speziellerpnmlParser.parse();
+			} else {
+				System.err.println("Die Datei " + pnmlDatei.getAbsolutePath()
+						+ " wurde nicht gefunden!");
+			}
+		} else {
+			System.out.println("Bitte eine Datei als Parameter angeben!");
+		}
+	}
+
+	public SpecializedPNMLParser(final File pnml) {
+		super(pnml);
+	}
+	
+	
+	
+	@Override
+	public void newTransition(final String id) {
+		System.out.println("Test");
+		System.out.println("Transition mit id " + id + " wurde gefunden.");
+	}
+
+}

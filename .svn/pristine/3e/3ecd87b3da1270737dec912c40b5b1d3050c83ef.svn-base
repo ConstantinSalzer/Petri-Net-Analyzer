@@ -1,0 +1,51 @@
+package datenstruktur;
+
+import java.util.HashMap;
+
+public class pEG {
+	public HashMap<String, EGKnoten> egKnoten;
+	public HashMap<String, EGKante> egKanten;
+	public EGKnoten aktuelleMarkierung;
+	public EGKnoten anfangsKnoten;
+	
+	public pEG() {
+		this.egKnoten = new HashMap<String, EGKnoten>();
+		this.egKanten = new HashMap<String, EGKante>();
+	}
+	
+	void addKnoten(EGKnoten egKnoten) {
+		this.egKnoten.put(egKnoten.getId(), egKnoten);
+	}
+	
+	void addKante (EGKante egKante) {
+		this.egKanten.put(egKante.getId(), egKante);
+	}
+	
+	public void setAktuelleMarkierung(EGKnoten aktuelleMarkierung) {
+		this.aktuelleMarkierung = aktuelleMarkierung;
+	}
+	
+	void setAnfangsKnoten(EGKnoten egKnoten) {
+		this.anfangsKnoten = egKnoten;
+	}
+	
+	void update(EGKnoten knoten, String string, Transition transition) {
+		if (!this.egKnoten.containsKey(string)) {
+			EGKnoten neuerKnoten = new EGKnoten(string);
+			this.addKnoten(neuerKnoten);
+			this.addKante(new EGKante(transition, knoten, neuerKnoten));
+			this.aktuelleMarkierung = neuerKnoten;
+		} else {
+			this.aktuelleMarkierung = this.egKnoten.get(string);
+		}if (!this.egKanten.containsKey(knoten.getName()+string)){
+			this.addKante(new EGKante(transition, knoten, egKnoten.get(string)));
+		} else if (!(this.egKanten.get(knoten.getName()+string).transition.equals(transition))){
+			this.addKante(new EGKante(transition, knoten, egKnoten.get(string)));
+			System.out.println("hallooo");
+		}
+	}
+	
+	void zuruckzurAnfangsmarkierung() {
+		this.aktuelleMarkierung = this.anfangsKnoten;
+	}
+}

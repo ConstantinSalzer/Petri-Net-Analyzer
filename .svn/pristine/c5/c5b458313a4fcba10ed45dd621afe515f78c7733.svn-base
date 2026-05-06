@@ -1,0 +1,45 @@
+package datenstruktur;
+
+//Klasse für Transitionen
+
+public class Transition extends Knoten{
+	
+	//variablen für Transitionen
+	
+	Position position;
+	boolean aktiviert;
+	
+	//Konstruktor
+	
+	public Transition (String id) {
+		super(id);
+	}
+	
+	//Methode um eine Transition zu aktivieren
+	
+	public void aktiviere() {
+		this.aktiviert= true;
+	}
+	
+	//Methode um eine Transition zu deaktivieren
+	
+	public void deaktiviere () {
+		this.aktiviert = false;
+	}
+	
+	//gibt zurück, ob die Transition aktiviert oder deaktiviert ist
+	
+	public boolean istAktiviert() {
+		return aktiviert;
+	}
+	
+	//getter und setter
+	
+	void setPosition(Position position) {
+		this.position = position;
+	}
+	
+	public Position getPosition () {
+		return position;
+	}
+}

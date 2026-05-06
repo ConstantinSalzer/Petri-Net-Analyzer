@@ -1,0 +1,221 @@
+package datenstruktur;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+//Klasse die die Datenstruktur für Petrinetze darstellt
+
+public class Petrinetz {
+	
+	//variablen der Datenstruktur, alle Transitionen, Stellen, Kanten und der Erreichbarkeitsgraf wird abgespeichert
+	public HashMap<String, Transition> Transitionen;
+	public HashMap<String, Stelle> Stellen;
+	public HashMap<String, PetrinetzKante> Kanten;
+	public pEG ErreichbarkeitsGraf;
+	
+	//Konstruktor der Klasse
+	
+	public Petrinetz() {
+		this.Transitionen = new HashMap<String, Transition>();
+		this.Stellen = new HashMap<String, Stelle>();
+		this.Kanten = new HashMap<String, PetrinetzKante>();
+	}
+	
+	//Methode um eine Transition hinzuzufügen
+	
+	void addTransition(Transition transition) {
+		Transitionen.put(transition.getId(), transition);
+	}
+	
+	//Methode um eine Stelle hinzuzufügen
+	
+	void addStelle(Stelle stelle) {
+		Stellen.put(stelle.getId(), stelle);
+	}
+	
+	//Methode um eine Kante hinzuzufügen
+	
+	void addKanten(PetrinetzKante kante) {
+		Kanten.put(kante.getId(), kante);
+	}
+	
+	//Methode, mit der eine Transition geschalten wird
+	
+	public void transitionSchalten (String id) {
+		Transition transition = Transitionen.get(id);
+		EGKnoten ausgangsmarkierung = ErreichbarkeitsGraf.getAktuelleMarkierung();
+		if (!transition.istAktiviert()) {
+			System.out.println("Transition muss aktiviert sein!");
+		} else {
+			for (PetrinetzKante kante: Kanten.values()) {
+				if (kante.getTransition().equals(transition)) {
+					if (kante.stelleIstQuelle()) {
+						kante.getStelle().verringereMarkenzahl();
+					} else {
+						kante.getStelle().erhöheMarkenzahl();
+					}
+				}
+			}
+			ErreichbarkeitsGraf.update(ausgangsmarkierung, this.EGKnotenName(), transition);
+		}
+	} 
+	
+	//Methode mit der übperprüft wird, welche Transitionen aktivierbar sind
+	
+	public void überprüfeAktivierbarkeit() {
+		Map<Transition, Boolean> aktivierbarkeit = new HashMap<>();
+		
+		for (Transition transition: Transitionen.values()) {
+			aktivierbarkeit.put(transition, true);
+		}
+		
+		for (PetrinetzKante kante : Kanten.values()) {
+	        if (kante.stelleIstQuelle()) {
+	            if (kante.getStelle().getMarkenzahl() <= 0) {
+	                aktivierbarkeit.put(kante.getTransition(), false);
+	            }
+	        }
+	    }
+		
+		 for (Map.Entry<Transition, Boolean> entry : aktivierbarkeit.entrySet()) {
+		        if (entry.getValue()) {
+		            entry.getKey().aktiviere();
+		        } else {
+		            entry.getKey().deaktiviere();
+		        }
+		 }
+	}
+	
+	//Methode mit der die Anfangsmarkierung abgespeichert wird
+	
+	public void setzeAnfangsmarkierung() {
+		for (Stelle stelle: Stellen.values()) {
+			stelle.setzeAnfangsmarkierung();
+		}
+	}
+	
+	//Methode mit der das Petrinetz und der Erreichbarkeitsgraf zurück auf die Anfangsmarkierung gesetzt wird 
+	
+	public void zuruckzurAnfangsmarkierung() {
+		for (Stelle stelle: Stellen.values()) {
+			stelle.zuruckzurAnfangsmarkierung();
+		}
+		this.überprüfeAktivierbarkeit();
+		ErreichbarkeitsGraf.zuruckzurAnfangsmarkierung();
+	}
+	
+	//Methode mit der der zu der derzeitigen Markierung passende Name für einen Erreichbarkeitsgraf-Knoten bestimmt wird
+	
+	public String EGKnotenName() {
+		List<String> stellenIDs = new ArrayList<String> (Stellen.keySet());
+		Collections.sort(stellenIDs);
+		String id = "(" + Stellen.get(stellenIDs.get(0)).getMarkenzahl();
+		if (stellenIDs.size()>1) {
+			for (int i = 1; i<stellenIDs.size(); i++) {
+				id = id + "|" +  Stellen.get(stellenIDs.get(i)).getMarkenzahl();
+			}
+		}
+		id = id + ")";
+		return id;
+	}
+	
+	//Methode mit der der erste Knoten im Erreichbarkeitsgraf gesetzt wird
+	
+	public void setzeErstenEGKnoten() {
+		this.ErreichbarkeitsGraf = new pEG();
+		EGKnoten egKnoten = new EGKnoten(EGKnotenName());
+		egKnoten.setName(EGKnotenName());
+		ErreichbarkeitsGraf.setAktuelleMarkierung(egKnoten);
+		ErreichbarkeitsGraf.setAnfangsKnoten(egKnoten);
+		ErreichbarkeitsGraf.addKnoten(egKnoten);
+	}
+	
+	//Methode, mit der das Petrinetz auf eine bestimmte Markierung gesetzt werden kann
+	
+	public void setzeBestimmteMarkierung (String markierung) {
+		int [] markierungint = getMarkierungAsInt(markierung);
+		List<String> stellenIDs = new ArrayList<String> (Stellen.keySet());
+		Collections.sort(stellenIDs);
+		for(int i = 0; i< stellenIDs.size(); i++) {
+			Stellen.get(stellenIDs.get(i)).setMarkenzahl(markierungint[i]);
+		}
+		this.überprüfeAktivierbarkeit();
+		ErreichbarkeitsGraf.setAktuelleMarkierung(ErreichbarkeitsGraf.getEGKnoten().get(markierung));
+	}
+	
+	//Methode, mit der man die derzeitige Markierung erhält (ohne Strings, reine integers)
+	
+	public static int [] getMarkierungAsInt(String markierung) {
+		markierung = markierung.replaceAll("\\(","");
+		markierung = markierung.replaceAll("\\|", "");
+		markierung = markierung.replaceAll("\\)","");
+		String[] markierungarray = markierung.split("");
+		int [] intarray = new int[markierungarray.length];
+		for (int i = 0; i<markierungarray.length; i++) {
+			intarray[i] = Integer.parseInt(markierungarray[i]);
+		}
+		return intarray;
+	}
+	
+	//Methode, die überprüft ob eine Markierung für alle Knoten gleich viele oder mehr Marken hat als eine andere Markierung
+	
+	public boolean unbeschränkt (String m, String mm) {
+		int[] x = getMarkierungAsInt(m);
+		int[] xx = getMarkierungAsInt(mm);
+		boolean wirklichwar = false;
+		for (int i = 0; i < x.length; i++) {
+			if (xx[i] < x[i]) {
+				return false;
+			}
+			if (xx[i] > x[i]) {
+				wirklichwar = true;
+			}
+		}
+		if (wirklichwar) {
+			this.ErreichbarkeitsGraf.setm(this.ErreichbarkeitsGraf.getEGKnoten().get(m));
+			this.ErreichbarkeitsGraf.setmm(this.ErreichbarkeitsGraf.getEGKnoten().get(mm));
+		}
+		return wirklichwar;
+	}
+	
+	//Methode, mit der überprüft wird, ob das Petrinetz beschränkt oder nicht ist
+	
+	public boolean überprüfeBeschränktheit() {
+		Stack<String[]> offen = new Stack<>();
+		Set<String> erreicht = new HashSet<>();
+		erreicht.add(this.ErreichbarkeitsGraf.getAktuelleMarkierung().getId());
+		for (Transition transition: Transitionen.values()) {
+			if (transition.istAktiviert()) {
+				offen.push(new String[] {ErreichbarkeitsGraf.getAktuelleMarkierung().getId(), transition.getId()});
+			}
+		}
+		while(!offen.empty()) {
+			String[] next = offen.pop();
+			String markierungId = next[0];
+			String transitionId = next[1];
+			this.setzeBestimmteMarkierung(markierungId);
+			this.transitionSchalten(transitionId);
+			this.überprüfeAktivierbarkeit();
+			if (!erreicht.contains(this.ErreichbarkeitsGraf.getAktuelleMarkierung().getId())) {
+				for (String markierung: erreicht) {
+					if (ErreichbarkeitsGraf.istErreichbar(markierung, markierungId) && unbeschränkt(markierung, markierungId)) {
+						return false;
+					} 
+				}
+				erreicht.add(this.ErreichbarkeitsGraf.getAktuelleMarkierung().getId());
+				for (Transition transition: Transitionen.values()) {
+					if (transition.istAktiviert()) {
+						offen.push(new String[] {ErreichbarkeitsGraf.getAktuelleMarkierung().getId(), transition.getId()});
+					}
+				}
+			}
+		}
+		return true;
+	}
+	
+}

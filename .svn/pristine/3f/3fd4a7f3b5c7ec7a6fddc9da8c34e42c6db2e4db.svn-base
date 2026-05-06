@@ -1,0 +1,31 @@
+//Klasse mit methoden, die in mehreren Klassen benötigt werden
+package datenstruktur;
+
+
+public class Werkzeuge {
+	
+	//Methode, die eine Markierungs-Bezeichnung als reines integer array zurückgibt
+	public static int [] getMarkierungAsInt(String markierung) {
+		
+		//alle aufgehenden Klammern werden gelöscht
+		markierung = markierung.replaceAll("\\(","");
+		
+		//alle Trennungsstriche werden gelöscht
+		markierung = markierung.replaceAll("\\|", "");
+		
+		//alle schließenden Klammern werden gelöscht
+		markierung = markierung.replaceAll("\\)","");
+		
+		//der restliche String wird verarbeitet und als integer array zurückgegeben
+		String[] markierungarray = markierung.split("");
+		int [] intarray = new int[markierungarray.length];
+		for (int i = 0; i<markierungarray.length; i++) {
+			intarray[i] = Integer.parseInt(markierungarray[i]);
+		}
+		return intarray;
+	}
+	
+	public static String Fehlermeldung (Exception e) {
+		return new String ("[Fehler] " + e.getClass().getSimpleName() + " : " + e.getMessage());
+	}
+}

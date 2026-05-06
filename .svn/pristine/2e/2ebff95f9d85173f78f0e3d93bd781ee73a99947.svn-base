@@ -1,0 +1,22 @@
+package datenstruktur;
+
+public class Knoten {
+	String name;
+	String id;
+	
+	public Knoten (String id) {
+		this.id = id;
+	}
+	
+	public String getId() {
+		return id;
+	}
+	
+	void setName(String name) {
+		this.name= name;
+	}
+	
+	public String getName() {
+		return name;
+	}
+}

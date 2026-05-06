@@ -1,0 +1,33 @@
+package datenstruktur;
+
+//Klasse, die Positionen von Elementen in Graphen darstellt
+
+public class Position {
+	
+	//variablen der Klasse 
+	
+	int xposition;
+	int yposition;
+	
+	//Konstruktor der Klasse
+	
+	public Position (int xposition, int yposition) {
+		this.xposition=xposition;
+		this.yposition=yposition;
+	}
+	
+	//getter und setter der Klasse
+	
+	public int getXposition() {
+		return (xposition);
+	}
+	
+	public int getYposition() {
+		return (-yposition);
+	}
+	
+	public void setposition(int xposition, int yposition) {
+		this.xposition = xposition;
+		this.yposition = yposition;
+	}
+}

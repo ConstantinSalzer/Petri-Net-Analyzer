@@ -1,0 +1,68 @@
+package GUI;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import org.graphstream.ui.swing_viewer.SwingViewer;
+import org.graphstream.ui.swing_viewer.ViewPanel;
+import org.graphstream.ui.view.Viewer;
+
+public class Rahmen extends JFrame{
+	
+	private static final long serialVersionUID = 7L;
+	
+	//private variable für Grafen
+	
+	private JLabel statusLabel;
+	
+	private Graf graf;
+	
+	private JPanel jpnlGraph;
+	
+	private ViewPanel viewPanel;
+	
+	public Rahmen (String titel, Graf graf) {
+		super(titel);
+		
+		this.graf = graf;
+		
+		this.setLayout(new BorderLayout());
+		
+		initPanelGraph();
+		
+		jpnlGraph = new JPanel (new BorderLayout());
+		jpnlGraph.add(BorderLayout.CENTER, viewPanel);
+		
+		this.add(jpnlGraph, BorderLayout.CENTER);
+		
+		statusLabel = new JLabel("Java.version = " + System.getProperty("java.version") + "  |  user.dir = " +System.getProperty("user.dir"));
+		
+		this.add(statusLabel, BorderLayout.SOUTH);
+		
+		double relativeHöhe = 0.6;
+		double Seitenverhältnis = 16.0/10.0;
+		Dimension bildschirmGröße = Toolkit.getDefaultToolkit().getScreenSize();
+		int h = (int) (bildschirmGröße.height * relativeHöhe);
+		int b = (int) (h * Seitenverhältnis);
+		setBounds((bildschirmGröße.width - b) / 2, (bildschirmGröße.height -h) / 2, b, h);
+		this.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
+		this.setVisible(true);
+	}
+	
+	private void initPanelGraph() {
+		SwingViewer viewer = new SwingViewer(graf,
+				Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+		
+		graf.setAttribute("ui.quality");
+		graf.setAttribute("ui.antialias");
+		
+		viewer.disableAutoLayout();
+		
+		viewPanel = (ViewPanel) viewer.addDefaultView(false);
+	}
+}

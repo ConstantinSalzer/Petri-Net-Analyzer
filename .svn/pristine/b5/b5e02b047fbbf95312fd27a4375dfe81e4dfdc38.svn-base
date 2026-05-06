@@ -1,0 +1,21 @@
+package Test;
+
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.net.URL;
+
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+
+public class Test {
+	public static void main (String[] args) {
+		 String pfad = "Bilder/1.png";  // genau so wie im Projekt!
+	        URL url = Test.class.getClassLoader().getResource(pfad);
+	        
+	        if (url != null) {
+	            System.out.println("Gefunden: " + url.toExternalForm());
+	        } else {
+	            System.err.println("NICHT gefunden: " + pfad);
+	        }
+	}
+}

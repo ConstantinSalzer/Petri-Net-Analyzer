@@ -1,0 +1,45 @@
+/*
+	Dies ist die css-Datei, in der das Layout des Graphen beschrieben ist.
+*/
+
+/*
+	Style-Angabe fuer einen Knoten
+*/
+node {
+	size: 30px;
+		
+		fill-color: #99ccff;
+		
+		text-color: #003366;
+		text-size: 18;
+		text-offset: -10,-5;
+		text-alignment: under;
+		
+		fill-color: white;
+		
+		stroke-mode: plain;
+		stroke-color: #003366;
+		stroke-width: 1px;
+}
+
+node.Transition {
+	shape: box;
+}
+
+node.TransitionAktiviert {
+	shape: box;
+	fill-color: blue; 
+}
+
+/*
+	Style-Angabe fuer eine Kante
+*/
+edge {
+	fill-color: #003366;
+	text-color: #003366;
+	arrow-shape: arrow;
+	arrow-size: 9px, 6px;
+	text-size:  12;
+	text-color: purple;
+	text-background-mode: plain;
+}

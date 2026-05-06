@@ -1,0 +1,44 @@
+package GUI;
+
+import org.graphstream.ui.view.ViewerListener;
+
+public class ClickListener implements ViewerListener{
+	
+	
+	private Rahmen rahmen;
+	
+	public ClickListener(Rahmen rahmen) {
+		this.rahmen = rahmen;
+	}
+	
+	@Override
+	public void buttonPushed(String id) {
+		System.out.println("ClickListener - buttonPushed: ");
+		rahmen.rahmenKnotenGedruckt(id);
+	}
+
+	@Override
+	public void viewClosed(String viewName) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void buttonReleased(String id) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseOver(String id) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseLeft(String id) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

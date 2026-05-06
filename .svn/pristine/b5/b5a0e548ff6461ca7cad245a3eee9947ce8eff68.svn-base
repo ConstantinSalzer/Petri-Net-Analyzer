@@ -1,0 +1,211 @@
+package datenstruktur;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+//Datenstruktur für partielle Erreichbarkeitsgraphen
+
+public class pEG {
+	
+	//Map aller Knoten
+	
+	private HashMap<String, EGKnoten> egKnoten;
+	
+	//Map aller Kanten
+	
+	private HashMap<String, EGKante> egKanten;
+	
+	//variable die die aktuelle Markierung die im partiellen Erreichbarkeitsgraphen und damit auch im Petrinetz referenziert
+	
+	private EGKnoten aktuelleMarkierung;
+	
+	//variable die den Anfangsknoten referenziert
+	
+	private EGKnoten anfangsKnoten;
+	
+	//variabel für den Knoten m
+	
+	private EGKnoten m;
+	
+	//variable für den Knoten m'
+	
+	private EGKnoten mm;
+	
+	//variable die den Pfad vom Anfangsknoten über m zu m' darstellt
+	
+	private List<String> pfadmmm;
+	
+	
+	//Konstruktor, der einen leeren partiellen Erreichbarkeitsgraphen erzeugt
+	public pEG() {
+		this.egKnoten = new HashMap<String, EGKnoten>();
+		this.egKanten = new HashMap<String, EGKante>();
+	}
+	
+	//getter und setter der Klassenvariablen
+	
+	public void setAktuelleMarkierung(EGKnoten aktuelleMarkierung) {
+		this.aktuelleMarkierung = aktuelleMarkierung;
+	}
+	
+	public EGKnoten getAktuelleMarkierung() {
+		return aktuelleMarkierung;
+	}
+	
+	void setAnfangsKnoten(EGKnoten egKnoten) {
+		this.anfangsKnoten = egKnoten;
+	}
+	
+	public EGKnoten getAnfangsKnoten() {
+		return anfangsKnoten;
+	}
+	
+	void setm(EGKnoten m) {
+		this.m=m;
+	}
+	
+	public EGKnoten getm() {
+		return m;
+	}
+	
+	void setmm(EGKnoten mm) {
+		this.mm=mm;
+	}
+	
+	public EGKnoten getmm() {
+		return mm;
+	}
+	
+	public HashMap<String,EGKnoten> getEGKnoten() {
+		return egKnoten;
+	}
+	
+	public HashMap<String, EGKante> getEGKanten() {
+		return egKanten;
+	}
+	
+	public List<String> getPfad() {
+		return pfadmmm;
+	}
+	
+	//Methode zum hinzufügen von Knoten
+	
+	void addKnoten(EGKnoten egKnoten) {
+		this.egKnoten.put(egKnoten.getId(), egKnoten);
+	}
+	
+	//Methode zum hinzufügen von Kanten
+	
+	void addKante (EGKante egKante) {
+		this.egKanten.put(egKante.getId(), egKante);
+	}
+	
+	//Methode, die anhand von der alten und neuen Markierung und der Transition die geschalten wurde den partiellen Erreichbarkeitsgraph aktualisiert
+	
+	void update(EGKnoten knoten, String Markierung, Transition transition) {
+		
+		//überprüft, ob die erreichte Markierung im partiellen Erreichbarkeitsgraphen enthalten ist
+		
+		if (!this.egKnoten.containsKey(Markierung)) {
+			
+			//erstellt einen neuen Knoten, fügt ihn samt dazugehöriger Kante hinzu und aktualisiert die aktuelle markierung
+			EGKnoten neuerKnoten = new EGKnoten(Markierung);
+			this.addKnoten(neuerKnoten);
+			this.addKante(new EGKante(transition, knoten, neuerKnoten));
+			this.aktuelleMarkierung = neuerKnoten;
+		
+		//wenn nicht enthalten, wird hier überprüft ob noch eine Kante zum partiellen Erreichbarkeitsgraphen hinzugefügt werden muss
+		} else {
+			this.aktuelleMarkierung = this.egKnoten.get(Markierung);
+		}if (!this.egKanten.containsKey(knoten.getName()+Markierung)){
+			this.addKante(new EGKante(transition, knoten, egKnoten.get(Markierung)));
+		} else if (!(this.egKanten.get(knoten.getName()+Markierung).getTransition().equals(transition))){
+			this.addKante(new EGKante(transition, knoten, egKnoten.get(Markierung)));
+		}
+	}
+	
+	//Methode um den partiellen Erreichbarkeitsgraphen zurück auf die Anfangsmarkierung setzt
+	void zuruckzurAnfangsmarkierung() {
+		this.aktuelleMarkierung = this.anfangsKnoten;
+	}
+	
+
+	//Methode, die überprüft, ob ein Knoten von einem anderen Knoten aus erreichbar ist
+	
+	public boolean istErreichbar (String von, String zu)  {
+		
+		//initialisieren aller variablen
+		pfadmmm = new ArrayList<>();
+		List<String> pfad1 = findePfad(this.anfangsKnoten.getId(), von);
+		List<String> pfad2 = findePfad(von, zu);
+		
+		//überprüfen, ob einer der Pfade leer ist, also der Knoten nicht von dem ersten Knoten aus erreichbar ist
+		if (pfad1 == null || pfad2 == null) {
+			return false;
+		}
+		
+		//Speicherung des gesamten Pfades vom Anfangsknoten über den Knoten m zum Knoten m'
+		
+		List<String> gesamterPfad = new ArrayList<>(pfad1);
+		pfad2.remove(0);
+		gesamterPfad.addAll(pfad2);
+		
+		for (int i = 0; i < gesamterPfad.size() - 1; i++) {
+	        String vonId = gesamterPfad.get(i);
+	        String nachId = gesamterPfad.get(i + 1);
+	        for (EGKante kante : egKanten.values()) {
+	            if (kante.getQuellID().equals(vonId) && kante.getZielID().equals(nachId)) {
+	                pfadmmm.add(kante.getId());
+	                break;
+	            }
+	        }
+	    }
+		return true;
+	}
+	
+	//Methode, mit der ein Pfad zwischen zwei Knoten gesucht wird
+	
+	public List<String> findePfad (String von, String zu) {
+		
+		//initialisierung der für die überprüfung benötigten Variablen
+		Stack<EGKnoten> stapel = new Stack<>();
+		Set<String> besucht = new HashSet<>();
+		Map<String, String> vorgaenger = new HashMap<>();
+		stapel.add(egKnoten.get(von));
+		besucht.add(von);
+		
+		
+		//Algorithmus zur überprüfung
+		
+		while (!stapel.isEmpty()) {
+			EGKnoten aktuell = stapel.pop();
+			for (EGKante kante : egKanten.values()) {
+	            if (kante.getQuellID().equals(aktuell.getId())) {
+	                String zielId = kante.getZielID();
+	                if (!besucht.contains(zielId)) {
+	                    vorgaenger.put(zielId, aktuell.getId());
+	                    if (zielId.equals(zu)) {
+	                        List<String> pfad = new ArrayList<>();
+	                        String k = zu;
+	                        while (k != null) {
+	                            pfad.add(k);
+	                            k = vorgaenger.get(k);
+	                        }
+	                        Collections.reverse(pfad);
+	                        return pfad;
+	                    }
+	                    stapel.push(egKnoten.get(kante.getZielID()));
+	                    besucht.add(zielId);
+	                }
+	            }
+	        }
+	    }
+		return null;
+	}
+}

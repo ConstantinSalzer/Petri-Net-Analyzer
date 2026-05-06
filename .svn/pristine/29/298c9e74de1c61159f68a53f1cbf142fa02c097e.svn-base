@@ -1,0 +1,10 @@
+package Test;
+
+import javax.swing.JFileChooser;
+
+public class Test {
+	public static void main (String[] args) {
+		JFileChooser J = new JFileChooser();
+		J.showSaveDialog(null);
+	}
+}

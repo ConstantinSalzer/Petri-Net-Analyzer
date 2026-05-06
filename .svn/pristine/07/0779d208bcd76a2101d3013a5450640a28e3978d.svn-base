@@ -1,0 +1,93 @@
+package GUI;
+
+import java.util.Map;
+
+import org.graphstream.graph.Edge;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.ui.spriteManager.Sprite;
+import org.graphstream.ui.spriteManager.SpriteManager;
+
+import datenstruktur_Petrinetz.Kante;
+import datenstruktur_Petrinetz.Petrinetz;
+import datenstruktur_Petrinetz.Stelle;
+import datenstruktur_Petrinetz.Transition;
+
+public class Graf extends MultiGraph{
+
+	private static String CSS_FILE = "url(" + Graf.class.getResource("/graph.css") + ")";
+	
+	private SpriteManager spriteMan;
+	
+	private Sprite spriteMark;
+	
+	public Graf(Petrinetz petrinetz) {
+		super ("Test");
+		this.setAttribute("ui.stylesheet", CSS_FILE);
+		for (Map.Entry<String, Transition> entry: petrinetz.Transitionen.entrySet()) {
+			Node node = this.addNode(entry.getValue().getId());
+			node.setAttribute("ui.class", "Transition");
+			node.setAttribute("ui.label", "[" + entry.getValue().getId() + "]" + " " + entry.getValue().getName());
+			node.setAttribute("xy",entry.getValue().getPosition().getXposition(), entry.getValue().getPosition().getYposition());
+		}
+		for (Map.Entry<String, Stelle> entry: petrinetz.Stellen.entrySet()) {
+			Node node = this.addNode(entry.getValue().getId());
+			node.setAttribute("ui.label","[" + entry.getValue().getId() + "]" + " " + entry.getValue().getName() + " <" + entry.getValue().getMarkenzahl()+">");
+			node.setAttribute("xy",entry.getValue().getPosition().getXposition(),entry.getValue().getPosition().getYposition());
+			if (entry.getValue().getMarkenzahl()>0) {
+				switch (entry.getValue().getMarkenzahl()) {
+					case 1:
+						node.setAttribute("ui.class", "Stelle_1");
+						break;
+					case 2:
+						node.setAttribute("ui.class", "Stelle_2");
+						break;
+					case 3:
+						node.setAttribute("ui.class", "Stelle_3");
+						break;
+					case 4:
+						node.setAttribute("ui.class", "Stelle_4");
+						break;
+					case 5:
+						node.setAttribute("ui.class", "Stelle_5");
+						break;
+					case 6:
+						node.setAttribute("ui.class", "Stelle_6");
+						break;
+					case 7:
+						node.setAttribute("ui.class", "Stelle_7");
+						break;
+					case 8:
+						node.setAttribute("ui.class", "Stelle_8");
+						break;
+					case 9:
+						node.setAttribute("ui.class", "Stelle_9");
+						break;
+					default:
+						node.setAttribute("ui.class", "Stelle_10");
+						break;
+				}
+			}
+		}
+		
+		for (Map.Entry<String, Kante> entry: petrinetz.Kanten.entrySet()) {
+			if (entry.getValue().stelleIstQuelle()) {
+				Edge edge = this.addEdge(entry.getValue().getId(), entry.getValue().getStelle().getId(), entry.getValue().getTransition().getId(), true);
+				edge.setAttribute("ui.class", "edge");
+				edge.setAttribute("ui.label", "[" + entry.getValue().getId() + "]");
+			} else {
+				Edge edge = this.addEdge(entry.getValue().getId(), entry.getValue().getTransition().getId(), entry.getValue().getStelle().getId(), true);
+				edge.setAttribute("ui.class", "edge");
+				edge.setAttribute("ui.label", "[" + entry.getValue().getId() + "]");
+			}
+			
+		}
+	}
+	
+	public void markLastClickedNode(String id) {
+		if (spriteMark == null) {
+			spriteMark = spriteMan.addSprite("sMark");
+		}
+		spriteMark.attachToNode(id);
+	}
+}

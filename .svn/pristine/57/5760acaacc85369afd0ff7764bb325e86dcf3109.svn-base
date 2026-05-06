@@ -1,0 +1,59 @@
+package datenstruktur_Petrinetz;
+
+public class Stelle {
+	String name;
+	String id;
+	int markenzahl;
+	int anfangsmarkierungMarkenzahl;
+	Position position;
+	
+	public Stelle (String id) {
+		this.id = id;
+	}
+	
+	public String getId () {
+		return id;
+	}
+			
+	void setName (String name) {
+		this.name = name;
+	}
+	
+	public String getName () {
+		return name;
+	}
+	
+	void setMarkenzahl(int markenzahl) {
+		this.markenzahl = markenzahl;
+	}
+	
+	void setzeAnfangsmarkierung() {
+		this.anfangsmarkierungMarkenzahl = markenzahl;
+	}
+	
+	void zuruckzurAnfangsmarkierung() {
+		this.markenzahl = anfangsmarkierungMarkenzahl;
+	}
+	
+	public int getMarkenzahl () {
+		return markenzahl;
+	}
+	
+	public int erhöheMarkenzahl() {
+		markenzahl++;
+		return markenzahl;
+	}
+	
+	public int verringereMarkenzahl() {
+		markenzahl--;
+		return markenzahl;
+	}
+	
+	void setPosition(Position position) {
+		this.position = position;
+	}
+	
+	public Position getPosition () {
+		return position;
+	}
+}

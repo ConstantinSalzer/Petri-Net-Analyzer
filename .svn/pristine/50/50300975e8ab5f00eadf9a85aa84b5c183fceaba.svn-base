@@ -1,0 +1,83 @@
+package datenstruktur_Petrinetz;
+import java.io.File;
+
+import propra.pnml.PNMLWopedParser;
+
+public class SpecializedPNMLParser extends PNMLWopedParser{
+	
+	
+	public static void parser(final String args) {
+		if (args.length() > 0) {
+			File pnmlDatei = new File(args);
+			if (pnmlDatei.exists()) {
+				SpecializedPNMLParser speziellerpnmlParser = new SpecializedPNMLParser(pnmlDatei, new Petrinetz());
+				speziellerpnmlParser.initParser();
+				speziellerpnmlParser.parse();
+				
+			} else {
+				System.err.println("Die Datei " + pnmlDatei.getAbsolutePath()
+						+ " wurde nicht gefunden!");
+			}
+		} else {
+			System.out.println("Bitte eine Datei als Parameter angeben!");
+		}
+	}
+	
+	public Petrinetz petrinetz;
+	
+	public SpecializedPNMLParser(final File pnml, Petrinetz petrinetz) {
+		super(pnml);
+		this.petrinetz = petrinetz;
+	}
+	
+	Petrinetz returnPetrinetz () {
+		return petrinetz;
+	}
+	
+	
+	@Override
+	public void newTransition(final String id) {
+		Transition transition = new Transition (id);
+		petrinetz.addTransition(transition);
+	}
+	
+	@Override
+	public void newPlace (final String id) {
+		Stelle stelle = new Stelle(id);
+		petrinetz.addStelle(stelle);
+	}
+	
+	@Override
+	public void newArc (final String id, final String source, final String target) {
+		if (petrinetz.Stellen.containsKey(source)) {
+			Kante kante = new Kante(id, petrinetz.Stellen.get(source), petrinetz.Transitionen.get(target), true);
+			petrinetz.addKanten(kante);
+		} else {
+			Kante kante = new Kante (id, petrinetz.Stellen.get(target), petrinetz.Transitionen.get(source), false);
+			petrinetz.addKanten(kante);
+		}
+	}
+	
+	@Override
+	public void setPosition (final String id, final String x, final String y) {
+		Position positoin = new Position (Integer.parseInt(x), Integer.parseInt(y));
+		if (petrinetz.Stellen.containsKey(id)) {
+			petrinetz.Stellen.get(id).setPosition(positoin);
+		} else {
+			petrinetz.Transitionen.get(id).setPosition(positoin);
+		}
+	}
+	
+	@Override
+	public void setName(final String id, final String name) {
+		if (petrinetz.Stellen.containsKey(id)) {
+			petrinetz.Stellen.get(id).setName(name);
+		} else {
+			petrinetz.Transitionen.get(id).setName(name);
+		}
+	}
+	
+	public void setTokens(final String id, final String tokens) {
+		petrinetz.Stellen.get(id).setMarkenzahl(Integer.parseInt(tokens));
+	}
+}

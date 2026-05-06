@@ -1,0 +1,231 @@
+package datenstruktur;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+//Klasse die die Datenstruktur für Petrinetze darstellt
+
+public class Petrinetz {
+	
+	//variablen der Datenstruktur, alle Transitionen, Stellen, Kanten und der Erreichbarkeitsgraf wird abgespeichert
+	public HashMap<String, Transition> Transitionen;
+	public HashMap<String, Stelle> Stellen;
+	public HashMap<String, PetrinetzKante> Kanten;
+	public pEG ErreichbarkeitsGraf;
+	
+	//Konstruktor der Klasse
+	
+	public Petrinetz() {
+		this.Transitionen = new HashMap<String, Transition>();
+		this.Stellen = new HashMap<String, Stelle>();
+		this.Kanten = new HashMap<String, PetrinetzKante>();
+	}
+	
+	//Methode um eine Transition hinzuzufügen
+	
+	void addTransition(Transition transition) {
+		Transitionen.put(transition.getId(), transition);
+	}
+	
+	//Methode um eine Stelle hinzuzufügen
+	
+	void addStelle(Stelle stelle) {
+		Stellen.put(stelle.getId(), stelle);
+	}
+	
+	//Methode um eine Kante hinzuzufügen
+	
+	void addKanten(PetrinetzKante kante) {
+		Kanten.put(kante.getId(), kante);
+	}
+	
+	//Methode, mit der eine Transition geschalten wird
+	
+	public void transitionSchalten (String id) {
+		
+		//Transition und ausgangsmarkierung wird abgespeichert
+		Transition transition = Transitionen.get(id);
+		EGKnoten ausgangsmarkierung = ErreichbarkeitsGraf.getAktuelleMarkierung();
+		
+		//wenn Transition nicht aktiviert ist wird eine Fehlermeldung ausgegeben
+		if (!transition.istAktiviert()) {
+			System.out.println("Transition muss aktiviert sein!");
+		} else {
+			//sämtliche Stellen mit einer Kante zu der Transition wird eine Marke abgezogen, alle Stellen mit einer Kante von der Transitio wird ein Marke hinzugefügt 
+			for (PetrinetzKante kante: Kanten.values()) {
+				if (kante.getTransition().equals(transition)) {
+					if (kante.stelleIstQuelle()) {
+						kante.getStelle().verringereMarkenzahl();
+					} else {
+						kante.getStelle().erhöheMarkenzahl();
+					}
+				}
+			}
+			
+			//Erreichbarkeitsgraf wird überarbeitet
+			ErreichbarkeitsGraf.update(ausgangsmarkierung, this.EGKnotenName(), transition);
+		}
+	} 
+	
+	//Methode mit der übperprüft wird, welche Transitionen aktivierbar sind
+	
+	public void überprüfeAktivierbarkeit() {
+		
+		//alle Transitionen werden gemeinsam mit einer boolean variable die anfangs auf true gesetzt wird in einer map abgespeichert
+		Map<Transition, Boolean> aktivierbarkeit = new HashMap<>();
+		
+		for (Transition transition: Transitionen.values()) {
+			aktivierbarkeit.put(transition, true);
+		}
+		
+		//alle Transitionen zu denen eine Kante führt, deren Quelle eine Stelle mit 0 Marken ist werden auf false gesetzt
+		for (PetrinetzKante kante : Kanten.values()) {
+	        if (kante.stelleIstQuelle()) {
+	            if (kante.getStelle().getMarkenzahl() <= 0) {
+	                aktivierbarkeit.put(kante.getTransition(), false);
+	            }
+	        }
+	    }
+		
+		//das Endergebnis wird von der Map direkt in den jeweiligen Transitionen abgespeichert
+		for (Map.Entry<Transition, Boolean> entry : aktivierbarkeit.entrySet()) {
+		        if (entry.getValue()) {
+		            entry.getKey().aktiviere();
+		        } else {
+		            entry.getKey().deaktiviere();
+		        }
+		 }
+	}
+	
+	//Methode mit der die Anfangsmarkierung abgespeichert wird
+	
+	public void setzeAnfangsmarkierung() {
+		for (Stelle stelle: Stellen.values()) {
+			stelle.setzeAnfangsmarkierung();
+		}
+	}
+	
+	//Methode mit der das Petrinetz und der Erreichbarkeitsgraf zurück auf die Anfangsmarkierung gesetzt wird 
+	
+	public void zuruckzurAnfangsmarkierung() {
+		for (Stelle stelle: Stellen.values()) {
+			stelle.zuruckzurAnfangsmarkierung();
+		}
+		this.überprüfeAktivierbarkeit();
+		ErreichbarkeitsGraf.zuruckzurAnfangsmarkierung();
+	}
+	
+	//Methode mit der der zu der derzeitigen Markierung passende Name für einen Erreichbarkeitsgraf-Knoten bestimmt wird
+	
+	public String EGKnotenName() {
+		
+		//Die Markenzahlen werden sortiert in einer Liste gespeichet
+		List<String> stellenIDs = new ArrayList<String> (Stellen.keySet());
+		Collections.sort(stellenIDs);
+		
+		//hier werden die Daten der Liste verarbeitet, sodass am Ende die richtige Id für den Erreichbarkeitsgraf-Knoten herauskommt
+		String id = "(" + Stellen.get(stellenIDs.get(0)).getMarkenzahl();
+		if (stellenIDs.size()>1) {
+			for (int i = 1; i<stellenIDs.size(); i++) {
+				id = id + "|" +  Stellen.get(stellenIDs.get(i)).getMarkenzahl();
+			}
+		}
+		id = id + ")";
+		return id;
+	}
+	
+	//Methode mit der der erste Knoten im Erreichbarkeitsgraf gesetzt wird
+	
+	public void setzeErstenEGKnoten() {
+		
+		//Erreichbarkeitsgraf und Knoten werden erstellt
+		this.ErreichbarkeitsGraf = new pEG();
+		EGKnoten egKnoten = new EGKnoten(EGKnotenName());
+		egKnoten.setName(EGKnotenName());
+		
+		//Einstellungen im Erreichbarkeitsgraf werden eingestellt
+		ErreichbarkeitsGraf.setAktuelleMarkierung(egKnoten);
+		ErreichbarkeitsGraf.setAnfangsKnoten(egKnoten);
+		ErreichbarkeitsGraf.addKnoten(egKnoten);
+	}
+	
+	//Methode, mit der das Petrinetz auf eine bestimmte Markierung gesetzt werden kann
+	
+	public void setzeBestimmteMarkierung (String markierung) {
+		
+		//die Stellen im Petrinetz werdne nach Id sortiert in einer Liste gespeichert und zu erreichende Markierung als integer array
+		int [] markierungint = Werkzeuge.getMarkierungAsInt(markierung);
+		List<String> stellenIDs = new ArrayList<String> (Stellen.keySet());
+		Collections.sort(stellenIDs);
+		
+		//die derzeitigen Stellen werden durchgegangen und die Markenzahl verändert
+		for(int i = 0; i< stellenIDs.size(); i++) {
+			Stellen.get(stellenIDs.get(i)).setMarkenzahl(markierungint[i]);
+		}
+		
+		//die aktiviertbarkeit wird überprüft und der Erreichbarkeitsgraf auf die Markierung gesetzt
+		this.überprüfeAktivierbarkeit();
+		ErreichbarkeitsGraf.setAktuelleMarkierung(ErreichbarkeitsGraf.getEGKnoten().get(markierung));
+	}
+	
+	
+	//Methode, mit der überprüft wird, ob das Petrinetz beschränkt oder nicht ist
+	
+	public boolean überprüfeBeschränktheit() {
+		
+		//ein stapel in dem String arrays gespeichert werden. in diesen arrays werden markierungen und transitionen gespeichert, die in dieser kombination noch nicht geschalten wurden
+		Stack<String[]> offen = new Stack<>();
+		
+		//ein set mit strings, in dem bereits erreichte markierungen gespeichert werden
+		Set<String> erreicht = new HashSet<>();
+		
+		//die anfangsmarkierung wird in erreicht gespeichert
+		erreicht.add(this.ErreichbarkeitsGraf.getAktuelleMarkierung().getId());
+		
+		//sämtliche aktivierten transitionen werden samt der aktuellen markierung in offen gespeichert
+		for (Transition transition: Transitionen.values()) {
+			if (transition.istAktiviert()) {
+				offen.push(new String[] {ErreichbarkeitsGraf.getAktuelleMarkierung().getId(), transition.getId()});
+			}
+		}
+		
+		//solange offen nicht leer ist, wird folgende schleife ausgeführt
+		while(!offen.empty()) {
+			//die daten aus offen werden ausgelesen
+			String[] next = offen.pop();
+			String markierungId = next[0];
+			String transitionId = next[1];
+			
+			//die markierung aus offen wird gesetzt und danach die Transition geschalten
+			this.setzeBestimmteMarkierung(markierungId);
+			this.transitionSchalten(transitionId);
+			this.überprüfeAktivierbarkeit();
+			
+			//falls die dadurch erreichte markierung nicht in erreicht existiert, wird überprüft ob man in kombination mit einer der bereits erreichten Markierungen ubeschränktheit zeigen kann
+			if (!erreicht.contains(this.ErreichbarkeitsGraf.getAktuelleMarkierung().getId())) {
+				for (String markierung: erreicht) {
+					if (ErreichbarkeitsGraf.istBeschränkt(markierung, markierungId)) {
+						return false;
+					} 
+				}
+				
+				//falls unbeschränktheit nicht gezeigt werden kann, werden alle von dieser Markierung aus schaltbaren Transitionen zu offen hinzugefügt und die neue Markierung zu erreicht
+				erreicht.add(this.ErreichbarkeitsGraf.getAktuelleMarkierung().getId());
+				for (Transition transition: Transitionen.values()) {
+					if (transition.istAktiviert()) {
+						offen.push(new String[] {ErreichbarkeitsGraf.getAktuelleMarkierung().getId(), transition.getId()});
+					}
+				}
+			}
+		}
+		
+		//sollten alle markierungen durchlaufen sein (was der fall sein muss, da von jeder markierung aus jede schaltbare Transition geschalten werden musste)
+		//wird hier beschränktheit festgestellt
+		return true;
+	}
+}

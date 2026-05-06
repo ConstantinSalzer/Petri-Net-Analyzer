@@ -1,0 +1,22 @@
+package datenstruktur;
+
+//Mutterklasse für Kanten in Petrinetzen und Erreichbarkeitsgraphen
+
+public class Kante {
+	
+	//variabel für die id der Kante
+	private String id;
+	
+	
+	//Konstruktor der Klasse
+	
+	public Kante(String id) {
+		this.id= id;
+	}
+	
+	//getter der Id-Variable
+	
+	public String getId() {
+		return id;
+	}
+}

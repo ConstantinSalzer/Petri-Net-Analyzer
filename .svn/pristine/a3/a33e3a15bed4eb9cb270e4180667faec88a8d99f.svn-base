@@ -1,0 +1,27 @@
+package Test;
+
+import java.io.File;
+
+import datenstruktur_Petrinetz.Petrinetz;
+import datenstruktur_Petrinetz.SpecializedPNMLParser;
+
+public class Parser_unterstützer {
+	public Petrinetz unterstützer(String [] args) {
+		if (args.length>0) {
+			File pnmlDatei = new File (args[0]);
+			if (pnmlDatei.exists()) {
+				SpecializedPNMLParser speziellerpnmlParser = new SpecializedPNMLParser(pnmlDatei, new Petrinetz());
+				speziellerpnmlParser.initParser();
+				speziellerpnmlParser.parse();
+				return speziellerpnmlParser.petrinetz;
+			} else {
+				System.err.println("Die Datei " + pnmlDatei.getAbsolutePath()
+				+ " wurde nicht gefunden!");
+				return new Petrinetz();
+			}
+		} else {
+			System.out.println("Bitte eine Datei als Parameter angeben!");
+			return new Petrinetz();
+		}
+	}
+}

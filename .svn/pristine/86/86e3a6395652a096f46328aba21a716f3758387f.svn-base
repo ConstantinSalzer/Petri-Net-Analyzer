@@ -1,0 +1,192 @@
+package GUI;
+
+import org.graphstream.graph.Edge;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.ui.spriteManager.Sprite;
+import org.graphstream.ui.spriteManager.SpriteManager;
+
+import datenstruktur.PetrinetzKante;
+import datenstruktur.Petrinetz;
+import datenstruktur.Stelle;
+import datenstruktur.Transition;
+import exceptions.MarkenzahlNichtVorhandenException;
+import exceptions.PositionNichtVorhandenException;
+
+//Klasse für die grafische Darstellung von Petrinetzen
+
+public class PetriGraf extends MultiGraph{
+
+	//für die Darstellung relevante Variablen
+	
+	private static String CSS_FILE = "url(" + PetriGraf.class.getResource("/graph.css") + ")";
+	private Petrinetz petrinetz;
+	public boolean stelleAngeklickt;
+	public Stelle angeklickteStelle;
+	private SpriteManager spriteMan;
+	
+	//Konstruktor, mit der aus der geladenen Petrinetz Datenstruktur das gesamte Petrinetz erstellt wird
+	
+	public PetriGraf(Petrinetz petrinetz) {
+		super ("PetriGraf");
+		this.petrinetz=petrinetz;
+		this.setAttribute("ui.stylesheet", CSS_FILE);
+		this.setAttribute("ui.class", "graph");
+		spriteMan = new SpriteManager(this);
+		
+		//Transitionen werden hinzugefügt
+		
+		for (Transition transition: petrinetz.Transitionen.values()) {
+			Node node = this.addNode(transition.getId());
+			transitionenStilSetzen(node);
+			node.setAttribute("ui.label", "[" + transition.getId() + "]" + " " + transition.getName());
+			try {
+				node.setAttribute("xy",transition.getPosition().getXposition(), transition.getPosition().getYposition());
+			} catch (Exception e) {
+				throw new PositionNichtVorhandenException(transition.getId());
+			}
+		}
+		
+		//Stellen werden hinzugefügt
+		
+		for (Stelle stelle: petrinetz.Stellen.values()) {
+			Node node = this.addNode(stelle.getId());
+			try {
+				node.setAttribute("xy",stelle.getPosition().getXposition(),stelle.getPosition().getYposition());
+			} catch (Exception e) {
+				throw new PositionNichtVorhandenException(stelle.getId());
+			}
+			stellenStilSetzen(node, false);
+		}
+		
+		//Kanten werden hinzugefügt
+		
+		for (PetrinetzKante kante: petrinetz.Kanten.values()) {
+			if (kante.stelleIstQuelle()) {
+				Edge edge = this.addEdge(kante.getId(), kante.getStelle().getId(), kante.getTransition().getId(), true);
+				Sprite sprite = spriteMan.addSprite(kante.getId());
+				sprite.attachToEdge(edge.getId());
+				sprite.setPosition(0.5);
+				sprite.setAttribute("ui.class", "edgeLabel");
+				sprite.setAttribute("ui.label", "[" + kante.getId() + "]");
+			} else {
+				Edge edge = this.addEdge(kante.getId(), kante.getTransition().getId(), kante.getStelle().getId(), true);
+				Sprite sprite = spriteMan.addSprite(kante.getId());
+				sprite.attachToEdge(edge.getId());
+				sprite.setPosition(0.5);
+				sprite.setAttribute("ui.class", "edgeLabel");
+				sprite.setAttribute("ui.label", "[" + kante.getId() + "]");
+			}
+		}
+	}
+	
+	//Methode, die angewendet wird wenn eine Transition geschalten wird
+	
+	public void transitionGedruckt(String id) {
+		
+		//Funktion wird bei der Datenstruktur aufgerufen
+		petrinetz.transitionSchalten(id);
+		
+		//grafische Darstellung wird verändert
+		this.erneuereKnotenStil();
+		
+		//variablen werden aktualisiert
+		stelleAngeklickt = false;
+		angeklickteStelle = null;
+	}
+	
+	//Methode, die angewendet wird wenn eine Stelle angeklickt wird
+	
+	public void stelleGedruckt(String id, boolean bleibtAngeklickt) {
+		Node node = this.getNode(id);
+		if (petrinetz.Stellen.containsKey(id)) {
+			
+			//kontolliert, ob bereits eine stelle grafisch hervorgehoben ist und ob die angeklickte Stelle grafisch hervorgehoben wird oder nicht
+			if (stelleAngeklickt) {
+				if (id.equals(angeklickteStelle.getId())) {
+					if (bleibtAngeklickt) {
+						stellenStilSetzen(node,true);
+					} else {
+						stellenStilSetzen(node,false);
+						stelleAngeklickt= false;
+						angeklickteStelle = null;					}
+				} else {
+					Node node2 = this.getNode(angeklickteStelle.getId());
+					stellenStilSetzen(node2, false);
+					stellenStilSetzen(node, true);
+					angeklickteStelle = petrinetz.Stellen.get(node.getId());
+				}
+			} else {
+				stellenStilSetzen(node, true);
+				stelleAngeklickt = true;
+				angeklickteStelle = petrinetz.Stellen.get(node.getId());
+			}			
+		}
+	}
+	
+	//Methode, die Stellen grafisch verändert
+	
+	private void stellenStilSetzen (Node node, boolean gedruckt) {
+		
+		//Stelle wird aus Stellen geholt, markenzahl, farbe und breite für grafische darstellung gespeichert
+		Stelle stelle = petrinetz.Stellen.get(node.getId());
+		int markenzahl = 0;
+		try{
+			markenzahl = stelle.getMarkenzahl();
+		} catch (Exception e){
+			throw new MarkenzahlNichtVorhandenException(stelle.getId());
+		}
+		String farbe = gedruckt ? "blue" : "black";
+		int breite = gedruckt ? 5 : 1;
+		
+		//name wird bearbeitet
+		node.setAttribute("ui.label","[" + stelle.getId() + "]" + " " + stelle.getName() + " <" + markenzahl+">");
+		
+		
+		if (markenzahl > 0) {
+			
+			//Bild für Markenzahl wird eingefügt und auch sonst wird die Breite und Farbe eingestellt
+			if (markenzahl > 9) markenzahl = 10;
+			node.setAttribute("ui.style",
+					"stroke-mode: plain; " +
+					"stroke-color: " +farbe + "; " +
+					"stroke-width: " +breite +"px; " +
+					"fill-mode: image-scaled; " +
+					"fill-image: url('resources/Bilder/" + markenzahl + ".png');"
+			);
+			
+			//grafische Darstellung ohne Markenzahl wird eingstellt
+		} else {
+			node.setAttribute("ui.style", 
+					"stroke-mode: plain; " +
+					"stroke-color: " + farbe + "; " +
+					"stroke-width: " + breite + "px;" +
+					"fill-mode: plain; " +
+					"fill-color: white;"
+			);
+		}
+	}
+	
+	//Methode die Transitionen grafisch verändert
+	
+	private void transitionenStilSetzen(Node node) {
+		Transition transition = petrinetz.Transitionen.get(node.getId());
+		if (transition.istAktiviert()) {
+			node.setAttribute("ui.class", "TransitionAktiviert");
+		} else {
+			node.setAttribute("ui.class", "Transition");
+		}
+	}
+	
+	//Methode, die die grafische Darstellung des gesamten Grafens updatet
+	
+	public void erneuereKnotenStil() {
+		petrinetz.überprüfeAktivierbarkeit();
+		for (Transition transition: petrinetz.Transitionen.values()) {
+			transitionenStilSetzen(this.getNode(transition.getId()));
+		}
+		for (Stelle stelle: petrinetz.Stellen.values()) {
+			stellenStilSetzen(this.getNode(stelle.getId()), false);
+		}
+	}
+}

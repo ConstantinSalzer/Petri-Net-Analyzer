@@ -1,0 +1,60 @@
+package datenstruktur;
+
+//Klasse für Stellen
+
+public class Stelle extends Knoten{
+	
+	//variablen von Stellen
+	
+	private int markenzahl;
+	private int anfangsmarkierungMarkenzahl;
+	private Position position;
+	
+	//Konstruktor
+	
+	public Stelle(String id) {
+		super(id);
+	}
+	
+	//getter und setter
+	
+	public void setMarkenzahl(int markenzahl) {
+		this.markenzahl = markenzahl;
+	}
+	
+	public void setzeAnfangsmarkierung() {
+		this.anfangsmarkierungMarkenzahl = markenzahl;
+	}
+	
+	public int getMarkenzahl () {
+		return markenzahl;
+	}
+	
+	public void setPosition(Position position) {
+		this.position = position;
+	}
+	
+	public Position getPosition () {
+		return position;
+	}
+	
+	//setzt die Markenzahl der Stelle auf die der Anfangsmarkierung zurück
+	
+	void zuruckzurAnfangsmarkierung() {
+		this.markenzahl = anfangsmarkierungMarkenzahl;
+	}
+	
+	//erhöht die Markenzahl der Stelle
+	
+	public int erhöheMarkenzahl() {
+		markenzahl++;
+		return markenzahl;
+	}
+	
+	//verringert die Markenzahl der Stelle
+	
+	public int verringereMarkenzahl() {
+		markenzahl--;
+		return markenzahl;
+	}
+}

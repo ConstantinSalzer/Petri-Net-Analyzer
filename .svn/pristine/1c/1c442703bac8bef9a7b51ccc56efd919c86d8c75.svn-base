@@ -1,0 +1,13 @@
+package Test;
+
+import java.awt.event.ActionEvent;
+import java.io.File;
+
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+
+public class Test {
+	public static void main (String[] args) {
+		System.out.println(7 % 1);
+	}
+}

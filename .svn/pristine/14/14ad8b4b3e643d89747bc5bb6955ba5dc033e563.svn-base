@@ -1,0 +1,10 @@
+package exceptions;
+
+//Fehlermeldung falls einer Stelle eine negative Markenzahl zugewiesen wurde
+public class NegativeMarkenZahlException extends RuntimeException{
+	private static final long serialVersionUID = 1L;
+
+	public NegativeMarkenZahlException (String id) {
+		super ("Stelle mit ID: " + id + " wurde negative Markenzahl zugewiesen!");
+	}
+}

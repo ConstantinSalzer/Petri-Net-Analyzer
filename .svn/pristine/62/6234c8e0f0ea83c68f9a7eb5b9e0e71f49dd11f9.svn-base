@@ -1,0 +1,24 @@
+package datenstruktur;
+
+public class Position {
+	int xposition;
+	int yposition;
+	
+	public Position (int xposition, int yposition) {
+		this.xposition=xposition;
+		this.yposition=yposition;
+	}
+	
+	public int getXposition() {
+		return (xposition);
+	}
+	
+	public int getYposition() {
+		return (-yposition);
+	}
+	
+	public void setposition(int xposition, int yposition) {
+		this.xposition = xposition;
+		this.yposition = yposition;
+	}
+}

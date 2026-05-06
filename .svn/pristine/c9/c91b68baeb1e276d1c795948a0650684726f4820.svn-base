@@ -1,0 +1,28 @@
+package datenstruktur;
+
+public class PetrinetzKante extends Kante{
+	Stelle stelle;
+	Transition transition;
+	boolean stelleIstQuelle;
+	boolean transitionIstQuelle;
+	
+	public PetrinetzKante (String id, Stelle stelle, Transition transition, boolean stelleIstQuelle) {
+		super(id);
+		this.stelle = stelle;
+		this.transition = transition;
+		this.stelleIstQuelle= stelleIstQuelle;
+		this.transitionIstQuelle = !stelleIstQuelle;
+	}
+	
+	public Stelle getStelle() {
+		return stelle;
+	}
+	
+	public Transition getTransition() {
+		return transition;
+	}
+	
+	public boolean stelleIstQuelle() {
+		return stelleIstQuelle;
+	}
+}

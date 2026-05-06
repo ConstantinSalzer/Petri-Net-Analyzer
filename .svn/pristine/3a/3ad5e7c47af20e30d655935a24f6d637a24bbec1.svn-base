@@ -1,0 +1,30 @@
+package datenstruktur;
+
+public class Transition extends Knoten{
+	Position position;
+	boolean aktiviert;
+	
+	public Transition (String id) {
+		super(id);
+	}
+	
+	public void aktiviere() {
+		this.aktiviert= true;
+	}
+	
+	public void deaktiviere () {
+		this.aktiviert = false;
+	}
+	
+	public boolean istAktiviert() {
+		return aktiviert;
+	}
+	
+	void setPosition(Position position) {
+		this.position = position;
+	}
+	
+	public Position getPosition () {
+		return position;
+	}
+}

@@ -1,0 +1,643 @@
+package GUI;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
+import javax.swing.JToolBar;
+import javax.swing.SwingConstants;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import org.graphstream.ui.swing_viewer.SwingViewer;
+import org.graphstream.ui.swing_viewer.ViewPanel;
+import org.graphstream.ui.view.Viewer;
+import org.graphstream.ui.view.ViewerPipe;
+
+import datenstruktur.Petrinetz;
+import datenstruktur.SpecializedPNMLParser;
+
+//Klasse für den Rahmen, in dem die grafische Darstellung von Erreichbarkeitsgraf und Petrinetz eingebettet wird und außerdem sämtliche bedienoberflächen Definiert werden
+
+public class Rahmen extends JFrame{
+	
+	private static final long serialVersionUID = 7L;
+	
+	//Label das angibt ob das Petrinetz substanziell modifiziert wurde
+	private JLabel statusLabel;
+	
+	//Label das Namen und Matrikelnummer angibt
+	private JLabel titelLabel;
+	
+	//Datenstruktur und grafische Darstellung von Petrinetz und Erreichbarkeitsgraf
+	private Petrinetz petrinetz;
+	private PetriGraf petriGraf;
+	private ErreichbarkeitsGraf erreichbarkeitsGraf;
+	
+	//Panel für Petrinetz und Erreichbarkeitsgraf
+	private JPanel jpnlPetri;
+	private JPanel jpnlpEG;
+	
+	//Viewpanel für Petrinetz und Erreichbarkeitsgraf
+	private ViewPanel viewPanelPetri;
+	private ViewPanel viewPanelpEG;
+	
+	//letztes geöffnetes File und die aktuell geöffnete Datei 
+	//kann variieren, da über Buttons auch zwischen den Dateien gesprungen werden kann, aber für neuladen trotzdem die letzte geöffnete gespeichert werden mus
+	private File letzteGeöffneteDatei;
+	private File aktuelleDatei;
+	
+	//Variablen für das Menü
+	private JMenuBar Menü;
+	private JMenu Datei;
+	private JMenu Hilfe;
+	private JMenuItem Info;
+	private JMenuItem Öffnen;
+	private JMenuItem NeuLaden;
+	private JMenuItem Beenden;
+	private JMenuItem AnalyseMehrerDateien;
+
+	//Variablen für Buttons
+	private JToolBar toolBar;
+	private JButton nächstepnmlDatei;
+	private JButton vorherigepnmlDatei;
+	private JButton löscheEG;
+	private JButton markePlus;
+	private JButton markeMinus;
+	private JButton resetAnfangsmarkierung;
+	private JButton analyse;
+	
+	//Filechooser, über den die Dateien ausgewählt werden
+	private JFileChooser chooser;
+	
+	//Variablen für die Darstellung des Textausgabebereichs
+	private JTextArea textPlatzhalter;
+	private JScrollPane textBereich;
+	
+	//Variablen für die richtige Aufteilung des Rahmens auf Textbereich und grafische Darstellung
+	private JSplitPane hauptAnzeigefläche;
+	private JSplitPane grafAnzeigefläche;
+	private JSplitPane obereAnzeigefläche;
+	
+	//Konstuktor
+	public Rahmen (String titel) {
+		super(titel);
+		
+		this.setLayout(new BorderLayout());
+		
+		//Erstellung des Statuslabels
+		statusLabel = new JLabel(aktuelleDatei == null ? "noch keine Datei geladen" : "Dateiname :" + aktuelleDatei.getName());
+		this.add(statusLabel, BorderLayout.SOUTH);
+		
+		//dynamische Einstellung der Größe des Feldes
+		double relativeHöhe = 0.6;
+		double Seitenverhältnis = 16.0/10.0;
+		Dimension bildschirmGröße = Toolkit.getDefaultToolkit().getScreenSize();
+		int h = (int) (bildschirmGröße.height * relativeHöhe);
+		int b = (int) (h * Seitenverhältnis);
+		setBounds((bildschirmGröße.width - b) / 2, (bildschirmGröße.height -h) / 2, b, h);
+		this.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
+		
+		ImageIcon bearbeitet = new ImageIcon ("resources/Bilder/bearbeitet.png");
+		
+		//Erstellung des Textfeldes und der JPanels und richtige aufteilung des Frames
+		textPlatzhalter =new JTextArea();
+		textPlatzhalter.setFont(new Font("Monospaced", Font.PLAIN, 12));
+		textBereich = new JScrollPane(textPlatzhalter);
+		textPlatzhalter.setLineWrap(false);
+		textPlatzhalter.setWrapStyleWord(false);
+		jpnlpEG = new JPanel (new BorderLayout());
+		jpnlPetri = new JPanel (new BorderLayout());
+		grafAnzeigefläche = new JSplitPane (JSplitPane.HORIZONTAL_SPLIT, jpnlPetri, jpnlpEG);
+		grafAnzeigefläche.setResizeWeight(0.5);
+		hauptAnzeigefläche = new JSplitPane (JSplitPane.VERTICAL_SPLIT, grafAnzeigefläche, textBereich);
+		hauptAnzeigefläche.setResizeWeight(0.7);
+		this.add(hauptAnzeigefläche, BorderLayout.CENTER);
+		
+		//Erstellung des FileChoosers
+		chooser = new JFileChooser("../ProPra-SS25-Basis/Beispiele");
+		FileNameExtensionFilter filter = new FileNameExtensionFilter(
+			    "PNML Dateien (*.pnml)", "pnml"
+			);
+		chooser.setFileFilter(filter);
+		
+		//Erstellung des Menüs und sämtlicher Unterpunkte samt ActionListeners
+		Menü = new JMenuBar();
+		this.setJMenuBar(Menü);
+		
+		Datei = new JMenu("Datei");
+		Öffnen = new JMenuItem("Öffnen");
+		Menü.add(Datei);
+		
+		//Menüpunkt öffnen zum öffnen von Dateien
+		Datei.add(Öffnen);
+		Öffnen.addActionListener(e->{		
+			int result = chooser.showOpenDialog(this);
+			chooser.setMultiSelectionEnabled(false);
+			if(result == JFileChooser.APPROVE_OPTION) {
+				letzteGeöffneteDatei = chooser.getSelectedFile();
+				updatePetriGraf(letzteGeöffneteDatei);
+			}
+		});
+		
+		//Menüpunkt Neu Laden
+		NeuLaden = new JMenuItem("Neu Laden");
+		Datei.add(NeuLaden);
+		NeuLaden.addActionListener(e->{
+			if (letzteGeöffneteDatei == null) {
+				textAusgeben("Sie müssen zuerst eine Datei öffnen");
+			} else {
+				updatePetriGraf(letzteGeöffneteDatei);
+			}
+		});
+		
+		//Analyse mehrerer Dateien liest mehrere Dateien aus und gibt das Ergebnis im Textfeld aus
+		AnalyseMehrerDateien = new JMenuItem("Analyse mehrerer Dateien");
+		Datei.add(AnalyseMehrerDateien);
+		AnalyseMehrerDateien.addActionListener(e-> {
+			chooser.setMultiSelectionEnabled(true);
+			int result = chooser.showOpenDialog(this);
+			if(result == JFileChooser.APPROVE_OPTION) {
+				
+				//für die Analyse relevante Variablen
+				File[] ausgewählteDateien = chooser.getSelectedFiles();
+				Arrays.sort(ausgewählteDateien, (f1, f2) -> f1.getName().compareToIgnoreCase(f2.getName()));
+				List<String[]> Ergebnis = new ArrayList<>();
+				int longestFile = 0;
+				int knotenLänge = 0;
+				int kantenLänge = 0;
+				int pfadLänge = 0;
+				int pfad = 0;
+				int m = 0;
+				int mm = 0;
+				
+				//Analyse wird für alle Dateien durchgeführt und längster Dateiname ermittelt
+				for (File file: ausgewählteDateien) {
+					textAusgeben("Datei " + file.getName() + " wird verarbeitet");
+					if (file.getName().length()>longestFile) {
+						longestFile = file.getName().length();
+					}
+				    Ergebnis.add(analyseOhneGrafik(file));
+				}
+				
+				//alle Ergebnisse werden je nach beschränkt oder unbeschränktheit auf längen von Atributen untersucht, um eine geordnete Ausgabe zu ermöglichen
+				for (String[] erg: Ergebnis) {
+					if (erg.length==2) {
+						if (erg[0].length() > knotenLänge) {
+							knotenLänge = erg[0].length();
+						}
+						if (erg[1].length() > kantenLänge) {
+							kantenLänge = erg[1].length();
+						}
+					}
+					if (erg.length==4) {
+						if (erg[0].length() > pfadLänge) {
+							pfadLänge = erg[0].length();
+						}
+						if (erg[1].length() > pfad) {
+							pfad = erg[1].length();
+						}
+						if (erg[2].length() > m) {
+							m = erg[2].length();
+						}
+						if (erg[3].length() > mm) {
+							mm = erg[3].length();
+						}
+					}
+				}
+				int ges = pfadLänge + pfad + m + mm;
+				ges = (ges != 0) ? ges : 21;
+				
+				//Das Ergebnis wird Ausgegeben, sodass alle Ergebnisse schön untereinander stehen
+				textAusgeben(String.format("%-"+ longestFile +"s %-3s %-10s %-3s %-" + ges + "s", "", " | ", "", " | ", "Knoten / Kanten bzw."));
+				textAusgeben(String.format("%-"+ longestFile +"s %-3s %-10s %-3s %-" + ges + "s", "Dateiname", " | ", "beschränkt", " | ", "Pfadlänge: Pfad; m, m'"));
+				textAusgeben(String.format("%-"+ longestFile +"s %-1s %-12s %-1s %-" + ges + "s", "-".repeat(longestFile+1), "|", "-".repeat(12), "|", "-".repeat(ges+2)));
+				for (int i = 0; i<ausgewählteDateien.length; i++) {
+					String name = ausgewählteDateien[i].getName();
+					String[] erg= Ergebnis.get(i);
+					if (erg.length == 2) {
+						textAusgeben(String.format("%-"+ longestFile +"s %-3s %-10s %-3s %-" + ges + "s", name, " | ", "ja", " | ", erg[0] + " / " + erg[1]));
+					} else {
+						int zw = pfadLänge + pfad + 4;
+						textAusgeben(String.format("%-"+ longestFile +"s %-3s %-10s %-3s %-" + zw + "s %-" + (m+2) + "s %-" + (mm+2) + "s", name, " | ", "nein", " | ", erg[0] + ":(" + erg[1] +");", erg[2], erg[3]));
+					}
+				}
+			}
+		});
+		
+		//Unterpunkt für das Beenden von dem Programm
+		Beenden = new JMenuItem("Beenden");
+		Datei.add(Beenden);
+		Beenden.addActionListener(e->{
+			System.exit(0);
+		});
+		
+		//Neuer Unterpunkt Hilfe mit Info gibt die Java version und das user directory aus
+		Hilfe = new JMenu("Hilfe");
+		Info = new JMenuItem ("Info");
+		Menü.add(Hilfe);
+		Hilfe.add(Info);
+		Info.addActionListener(e->{
+			JOptionPane.showMessageDialog(this,
+					"Java.version = " +System.getProperty("java.version")
+					+"\nuser.dir = " +System.getProperty("user.dir")
+					);
+		});
+		
+		
+		//Erstellung von Toolbar und Titellabel, einfügung in den Rahmen
+		titelLabel = new JLabel("Constantin Salzer" + "  |  q3756556", SwingConstants.CENTER);
+		toolBar = new JToolBar();
+		toolBar.setFloatable(false);
+		obereAnzeigefläche = new JSplitPane (JSplitPane.VERTICAL_SPLIT, toolBar, titelLabel);
+		this.add(obereAnzeigefläche, BorderLayout.NORTH);
+		obereAnzeigefläche.setEnabled(false);                
+		obereAnzeigefläche.setDividerSize(0);                  
+		obereAnzeigefläche.setResizeWeight(0.0);
+		
+	
+		//Erstellung von Buttons samt Image Icons für die Toolbar
+		
+		//Button für das öffnen der alphabetisch vorherigen Datei
+		ImageIcon vorherigeIcon = new ImageIcon("resources/Bilder/vorherigePNMLDatei.png");
+		vorherigepnmlDatei = new JButton(vorherigeIcon);
+		vorherigepnmlDatei.setToolTipText("öffne alphabetisch vorherige PNML-Datei aus dem zuletzt verwendeten Verzeichnis.");
+		toolBar.add(vorherigepnmlDatei);
+		vorherigepnmlDatei.addActionListener(e->{
+			ladeNachbarDatei(false);
+		});
+		
+		//Button für das öffnen der alphabetisch nächsten Datei
+		ImageIcon nächsteIcon = new ImageIcon ("resources/Bilder/nächstePNMLDatei.png");
+		nächstepnmlDatei = new JButton(nächsteIcon);
+		nächstepnmlDatei.setToolTipText("öffne alphabetisch nächste PNML-Datei aus dem zuletzt verwendeten Verzeichnis");
+		toolBar.add(nächstepnmlDatei);
+		nächstepnmlDatei.addActionListener(e->{
+			ladeNachbarDatei(true);
+		});
+		
+		//Button für das löschen des Erreichbarkeits-Grafen
+		ImageIcon lösche = new ImageIcon ("resources/Bilder/löscheEG.png");
+		löscheEG = new JButton(lösche);
+		löscheEG.setToolTipText("lösche aktuellen Erreichbarkeits-Grafen und setze markierung auf Anfangsmarkierung zurück");
+		toolBar.add(löscheEG);
+		löscheEG.addActionListener(e->{
+			if (aktuelleDatei == null) {
+				textAusgeben("Sie müssen zuerst eine Datei öffnen");
+			} else if (erreichbarkeitsGraf.getNodeCount()<2){
+				textAusgeben("Sie müssen zuerst den partiellen Erreichbarkeitsgraphen erweitern");
+			} else {
+				petrinetz.zuruckzurAnfangsmarkierung();
+				petriGraf.erneuereKnotenStil();
+				initialisierepEG();
+			}
+		});
+		
+		//Button mit dem die Markenzahl einer Stelle erhöht werden kann
+		ImageIcon plus = new ImageIcon ("resources/Bilder/plus.png");
+		markePlus = new JButton(plus);
+		markePlus.setToolTipText("erhöhe die Anzahl der Marken einer Stelle um 1");
+		toolBar.add(markePlus);
+		markePlus.addActionListener(e->{
+			if (letzteGeöffneteDatei == null) {
+				textAusgeben("Sie müssen zuerst eine Datei öffnen");
+			} else
+			if (!petriGraf.stelleAngeklickt) {
+				textAusgeben("Sie müssen zuerst eine Stelle anklicken");
+			} else {
+				petriGraf.angeklickteStelle.erhöheMarkenzahl();
+				statusLabel.setIcon(bearbeitet);
+				statusLabel.setToolTipText("Diese Datei wurde substanziell modifiziert");
+				petriGraf.erneuereKnotenStil();
+				petrinetz.setzeAnfangsmarkierung();
+				petrinetz.setzeErstenEGKnoten();
+				initialisierepEG();
+				petriGraf.stelleGedruckt(petriGraf.angeklickteStelle.getId(),true);
+			}
+		});
+		
+		//Button mit dem die Markenzahl einer Stelle verringert werden kann
+		ImageIcon minus = new ImageIcon ("resources/Bilder/minus.png");
+		markeMinus = new JButton(minus);
+		markeMinus.setToolTipText("verringere die Anzahl der Marken einer Stelle um 1");
+		toolBar.add(markeMinus);
+		markeMinus.addActionListener(e->{
+			if (letzteGeöffneteDatei == null) {
+				textAusgeben("Sie müssen zuerst eine Datei öffnen");
+			} else
+			if (!petriGraf.stelleAngeklickt) {
+				textAusgeben("Sie müssen zuerst eine Stelle anklicken");
+			} else if (petriGraf.angeklickteStelle.getMarkenzahl()==0){
+				textAusgeben("Anzahl der Marken kann nicht mehr verringert werden");
+			} else {
+				petriGraf.angeklickteStelle.verringereMarkenzahl();
+				statusLabel.setIcon(bearbeitet);
+				statusLabel.setToolTipText("Diese Datei wurde substanziell modifiziert");
+				petriGraf.erneuereKnotenStil();
+				petrinetz.setzeAnfangsmarkierung();
+				petrinetz.setzeErstenEGKnoten();
+				initialisierepEG();
+				petriGraf.stelleGedruckt(petriGraf.angeklickteStelle.getId(),true);
+			}
+		});
+		
+		//Button mit dem das Petrinetz auf die Anfangsmarkierung zurückgesetzt wird
+		ImageIcon reset = new ImageIcon("resources/Bilder/reset.png");
+		resetAnfangsmarkierung = new JButton (reset);
+		resetAnfangsmarkierung.setToolTipText("setze die die Markierung auf die Anfangsmarkierung zurück");
+		toolBar.add(resetAnfangsmarkierung);
+		
+		resetAnfangsmarkierung.addActionListener(e->{
+			if (aktuelleDatei == null) {
+				textAusgeben("Sie müssen zuerst eine Datei öffnen");
+			} else {
+				petrinetz.zuruckzurAnfangsmarkierung();
+				petriGraf.erneuereKnotenStil();
+				erreichbarkeitsGraf.markiereKnoten(petrinetz.ErreichbarkeitsGraf.getAnfangsKnoten().getId());
+			}
+		});
+		
+		//Button mit dem das gerade geöffnete Petrinetz auf beschränktheit überprüft wird und das Ergebniss sowohl textuell als auch Grafisch ausgegeben wird
+		ImageIcon analyseIcon = new ImageIcon("resources/Bilder/analyse.png");
+		analyse = new JButton (analyseIcon);
+		analyse.setToolTipText("analysiert, ob das Petrinetz beschränkt oder unbeschränkt ist");
+		toolBar.add(analyse);
+		analyse.addActionListener(e-> {
+			petrinetz.zuruckzurAnfangsmarkierung();
+			petriGraf.erneuereKnotenStil();
+			initialisierepEG();
+			if(petrinetz.überprüfeBeschränktheit()) {
+				JOptionPane.showMessageDialog(this,
+						"Das Petrinetz ist beschränkt"
+						);
+				textAusgeben("Das Petrinetz ist beschränkt und besteht aus " + petrinetz.ErreichbarkeitsGraf.getEGKnoten().size() + " Knoten und " + petrinetz.ErreichbarkeitsGraf.getEGKanten().size() + " Kanten.");
+				erreichbarkeitsGraf.updateGraf(null, null, false, false);
+				petrinetz.zuruckzurAnfangsmarkierung();
+				petriGraf.erneuereKnotenStil();
+				erreichbarkeitsGraf.markiereKnoten(petrinetz.ErreichbarkeitsGraf.getAnfangsKnoten().getId());
+				
+				
+			} else {
+				JOptionPane.showMessageDialog(this,
+						"Das Petrinetz ist unbeschränkt"
+						);
+				textAusgeben("Das Petrinetz ist unbeschränkt");
+				String transitionen = new String();
+				for (String trans: this.petrinetz.ErreichbarkeitsGraf.getPfad()) {
+					int index = trans.indexOf("(");
+					if (transitionen.length()>1) {
+						transitionen = transitionen + ", ";
+					}
+					transitionen = transitionen + trans.substring(0, index);
+				}
+				
+				textAusgeben("Die Pfadlänge zwischen m und m' ist " + petrinetz.ErreichbarkeitsGraf.getPfad().size() + " und besteht aus den Transitionen: " + transitionen);
+				textAusgeben("Der Knoten m hat die id: " + this.petrinetz.ErreichbarkeitsGraf.getm().getId());
+				textAusgeben("Der Knoten m' hat die id: " + this.petrinetz.ErreichbarkeitsGraf.getmm().getId());
+				
+				erreichbarkeitsGraf.updateGraf(null, null, false, true);
+				petrinetz.zuruckzurAnfangsmarkierung();
+				petriGraf.erneuereKnotenStil();
+			}
+		});
+		this.setVisible(true);
+	}
+	
+	//Methode mit der das Petrinetz auf beschränktheit überprüft wird, ohne das die grafische Darstellung verändert wird
+	private String[] analyseOhneGrafik(File pnmlDatei) {
+		SpecializedPNMLParser parser = new SpecializedPNMLParser(pnmlDatei);
+		parser.initParser();
+		parser.parse();
+		Petrinetz petri = parser.getfertigesPetrinetz();
+		if (petri.überprüfeBeschränktheit()) {
+			String[] Ergebnis = new String[2];
+			Ergebnis[0] = Integer.toString(petri.ErreichbarkeitsGraf.getEGKnoten().size());
+			Ergebnis[1] = Integer.toString(petri.ErreichbarkeitsGraf.getEGKanten().size());
+			return Ergebnis;
+		} else {
+			String[] Ergebnis = new String[4];
+			String transitionen = new String();
+			for (String trans: petri.ErreichbarkeitsGraf.getPfad()) {
+				int index = trans.indexOf("(");
+				if (transitionen.length()>1) {
+					transitionen = transitionen + ", ";
+				}
+				transitionen = transitionen + trans.substring(0, index);
+			}
+			Ergebnis[0] = Integer.toString(petri.ErreichbarkeitsGraf.getPfad().size());
+			Ergebnis[1] = transitionen;
+			Ergebnis[2] = petri.ErreichbarkeitsGraf.getm().getId();
+			Ergebnis[3] = petri.ErreichbarkeitsGraf.getmm().getId();
+			return Ergebnis;
+		}
+	}
+	
+	//Methode, mit der das Petrinetz (grafische Darstellung und die Datenstruktur) durch ein Neues anhand von einer pnmlDatei ersetzt wird
+	private void updatePetriGraf(File pnmlDatei) {
+		aktuelleDatei = pnmlDatei;
+		if (jpnlPetri != null) {
+			this.grafAnzeigefläche.remove(jpnlPetri);
+		}
+		SpecializedPNMLParser speziellerpnmlParser = new SpecializedPNMLParser(pnmlDatei);
+		speziellerpnmlParser.initParser();
+		speziellerpnmlParser.parse();
+		petrinetz = speziellerpnmlParser.getfertigesPetrinetz();
+		this.petriGraf=new PetriGraf(petrinetz);
+		initPanelPetriGraph(petriGraf);
+		jpnlPetri = new JPanel (new BorderLayout());
+		jpnlPetri.add(BorderLayout.CENTER, viewPanelPetri);
+		this.grafAnzeigefläche.setLeftComponent(jpnlPetri);
+		
+		initialisierepEG();
+		
+		statusLabel.setText("Dateiname: " + aktuelleDatei.getName() );
+		ImageIcon nochNichtBearbeitet = new ImageIcon("resources/Bilder/nochnichtbearbeitet.png");
+		statusLabel.setIcon(nochNichtBearbeitet);
+		statusLabel.setToolTipText("Diese Datei wurde nicht substanziell modifiziert");
+		this.revalidate();
+		this.repaint();
+	}
+	
+	//Methode mit der die Nachbardatei geladen wird, je nach boolean Wert die Vorherige oder die Nächste
+	private void ladeNachbarDatei (boolean nächste) {
+		if (letzteGeöffneteDatei == null) {
+			textAusgeben("Sie müssen zuerst eine Datei öffnen");
+		} else {
+			File Verzeichnis = aktuelleDatei.getParentFile();
+			File[] listeDateien = Verzeichnis.listFiles((dir, name) -> name.toLowerCase().endsWith(".pnml"));
+			List<File> pnmlDateien = Arrays.asList(listeDateien);
+			pnmlDateien.sort((f1, f2) -> f1.getName().compareToIgnoreCase(f2.getName()));
+			if (pnmlDateien.size()<2) {
+				textAusgeben("Es können keine Nachbardateien angezeigt werden, da nur eine PNML-Datei im Verzeichnis existiert!");
+			} else {
+				int aktuellerIndex = 0;
+				for (int i = 0; i < pnmlDateien.size(); i++) {
+					if (pnmlDateien.get(i).equals(aktuelleDatei)) {
+						aktuellerIndex = i;
+					}
+				}
+				int neueIndex;
+			    if (nächste) {
+			        neueIndex = (aktuellerIndex + 1) % pnmlDateien.size();
+			    } else {
+			        neueIndex = (aktuellerIndex - 1 + pnmlDateien.size()) % pnmlDateien.size();
+			    }
+			    updatePetriGraf(pnmlDateien.get(neueIndex));
+			}
+		}
+	}
+	
+	//Methode mit der man Text im Textfeld ausgeben lässt
+	private void textAusgeben(String text) {
+		textPlatzhalter.append(text + "\n");
+		textPlatzhalter.setCaretPosition(textPlatzhalter.getDocument().getLength());
+	}
+	
+	//Erstellen des Viewers und Listeners für das Petrinetz
+	private void initPanelPetriGraph(PetriGraf graf) {
+		SwingViewer viewer = new SwingViewer(graf,
+				Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+		
+		graf.setAttribute("ui.quality");
+		graf.setAttribute("ui.antialias");
+		
+		viewer.disableAutoLayout();
+		
+		viewPanelPetri = (ViewPanel) viewer.addDefaultView(false);
+		
+		ViewerPipe viewerPipe = viewer.newViewerPipe();
+		
+		ClickListener clickListener = new ClickListener(this);
+		
+		viewerPipe.addViewerListener(clickListener);
+		
+		
+		viewPanelPetri.addMouseListener(new MouseAdapter() {
+			
+			@Override
+			public void mousePressed(MouseEvent me) {
+				System.out.println("Rahmen - mousePressed: " + me);
+				viewerPipe.pump();
+			}
+			
+			@Override
+			public void mouseReleased(MouseEvent me) {
+				System.out.println("Rahmen - mouseReleased: " +me);
+				viewerPipe.pump();
+			}
+		});
+		
+		viewPanelPetri.addMouseWheelListener(new MouseWheelListener() {
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				double zoomLevel = viewPanelPetri.getCamera().getViewPercent();
+				if (e.getWheelRotation() == -1) {
+					zoomLevel -= 0.1;
+					if (zoomLevel < 0.1) {
+						zoomLevel = 0.1;
+					}
+				}
+				if (e.getWheelRotation() == 1) {
+					zoomLevel += 0.1;
+				}
+				viewPanelPetri.getCamera().setViewPercent(zoomLevel);
+			}
+		});
+	}
+	
+	
+	//Erstellen des Viewers und Listeners für den Erreichbarkeits-Graf
+	private void initPanelErreichbarkeitsGraph(ErreichbarkeitsGraf graf) {
+		SwingViewer viewer = new SwingViewer(graf,
+				Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+		
+		graf.setAttribute("ui.quality");
+		graf.setAttribute("ui.antialias");
+		
+		
+		viewPanelpEG = (ViewPanel) viewer.addDefaultView(false);
+		
+		viewer.enableAutoLayout();
+
+		ViewerPipe viewerPipe = viewer.newViewerPipe();
+		
+		ClickListener clickListener = new ClickListener(this);
+		
+		viewerPipe.addViewerListener(clickListener);
+		
+		viewPanelpEG.addMouseListener(new MouseAdapter() {
+			
+			@Override
+			public void mousePressed(MouseEvent me) {
+				System.out.println("Rahmen - mousePressed: " + me);
+				viewerPipe.pump();
+			}
+			
+			@Override
+			public void mouseReleased(MouseEvent me) {
+				System.out.println("Rahmen - mouseReleased: " +me);
+				viewerPipe.pump();
+			}
+		});
+		
+		viewPanelpEG.addMouseWheelListener(new MouseWheelListener() {
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				double zoomLevel = viewPanelpEG.getCamera().getViewPercent();
+				if (e.getWheelRotation() == -1) {
+					zoomLevel -= 0.1;
+					if (zoomLevel < 0.1) {
+						zoomLevel = 0.1;
+					}
+				}
+				if (e.getWheelRotation() == 1) {
+					zoomLevel += 0.1;
+				}
+				viewPanelpEG.getCamera().setViewPercent(zoomLevel);
+			}
+		});
+	}
+	
+	//Methodem, die bei drücken eines Knotens sowohl im Petrinetz oder Erreichbarkeitsgraf allen Stellen die Infos dazu benötigen diese weiterleitet
+	public void KnotenGedruckt(String id) {
+		if (erreichbarkeitsGraf.getNode(id)!= null) {
+			petrinetz.setzeBestimmteMarkierung(id);
+			petriGraf.erneuereKnotenStil();
+			erreichbarkeitsGraf.markiereKnoten(id);
+			petrinetz.ErreichbarkeitsGraf.setAktuelleMarkierung(petrinetz.ErreichbarkeitsGraf.getEGKnoten().get(id));
+		} else if (petrinetz.Stellen.containsKey(id)) {
+			petriGraf.stelleGedruckt(id, false);
+		} else {
+			petriGraf.transitionGedruckt(id);
+			erreichbarkeitsGraf.updateGraf(id, petrinetz.EGKnotenName(), true, false);
+		}
+	}
+	
+	//Methode mit der der Erreichbarkeitsgraf initialisiert wird
+	void initialisierepEG() {
+		petrinetz.setzeErstenEGKnoten();
+		this.erreichbarkeitsGraf = new ErreichbarkeitsGraf(petrinetz.ErreichbarkeitsGraf);
+		erreichbarkeitsGraf.initilisiere();
+		initPanelErreichbarkeitsGraph(erreichbarkeitsGraf);
+		jpnlpEG = new JPanel (new BorderLayout());
+		jpnlpEG.add(BorderLayout.CENTER, viewPanelpEG);
+		this.grafAnzeigefläche.setRightComponent(jpnlpEG);
+	}
+}

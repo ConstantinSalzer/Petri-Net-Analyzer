@@ -1,0 +1,11 @@
+package exceptions;
+
+//Exception, falls versucht wird etwas bei einem nicht existierenden Element einzustellen
+public class ElementNichtGefundenException extends RuntimeException{
+	private static final long serialVersionUID = 1L;
+
+	public ElementNichtGefundenException (String id) {
+		super ("Element mit ID: " + id + " wurde nicht gefunden!");
+	}
+
+}

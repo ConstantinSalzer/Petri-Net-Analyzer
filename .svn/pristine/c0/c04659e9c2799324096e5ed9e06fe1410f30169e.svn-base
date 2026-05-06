@@ -1,0 +1,26 @@
+package datenstruktur_Petrinetz;
+import java.util.HashMap;
+
+public class Petrinetz {
+	HashMap<String, Transition> Transitionen;
+	HashMap<String, Stelle> Stellen;
+	HashMap<String, Kante> Kanten;
+	
+	public Petrinetz() {
+		this.Transitionen = new HashMap<String, Transition>();
+		this.Stellen = new HashMap<String, Stelle>();
+		this.Kanten = new HashMap<String, Kante>();
+	}
+	
+	void addTransition(Transition transition) {
+		Transitionen.put(transition.id, transition);
+	}
+	
+	void addStelle(Stelle stelle) {
+		Stellen.put(stelle.id, stelle);
+	}
+	
+	void addKanten(Kante kante) {
+		Kanten.put(kante.id, kante);
+	}
+}

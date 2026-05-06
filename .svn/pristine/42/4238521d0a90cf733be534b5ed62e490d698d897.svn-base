@@ -1,0 +1,13 @@
+package datenstruktur;
+
+public class Kante {
+	String id;
+	
+	public Kante(String id) {
+		this.id= id;
+	}
+	
+	public String getId() {
+		return id;
+	}
+}

@@ -1,0 +1,118 @@
+package datenstruktur;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Petrinetz {
+	public HashMap<String, Transition> Transitionen;
+	public HashMap<String, Stelle> Stellen;
+	public HashMap<String, PetrinetzKante> Kanten;
+	public pEG pEG;
+	
+	public Petrinetz() {
+		this.Transitionen = new HashMap<String, Transition>();
+		this.Stellen = new HashMap<String, Stelle>();
+		this.Kanten = new HashMap<String, PetrinetzKante>();
+	}
+	
+	void addTransition(Transition transition) {
+		Transitionen.put(transition.id, transition);
+	}
+	
+	void addStelle(Stelle stelle) {
+		Stellen.put(stelle.id, stelle);
+	}
+	
+	void addKanten(PetrinetzKante kante) {
+		Kanten.put(kante.id, kante);
+	}
+	
+	public void transitionSchalten (String id) {
+		Transition transition = Transitionen.get(id);
+		EGKnoten ausgangsmarkierung = pEG.aktuelleMarkierung;
+		if (!transition.istAktiviert()) {
+			System.out.println("Transition muss aktiviert sein!");
+		} else {
+			for (PetrinetzKante kante: Kanten.values()) {
+				if (kante.transition.equals(transition)) {
+					if (kante.stelleIstQuelle) {
+						kante.stelle.verringereMarkenzahl();
+					} else {
+						kante.stelle.erhöheMarkenzahl();
+					}
+				}
+			}
+			pEG.update(ausgangsmarkierung, this.EGKnotenName(), transition);
+		}
+	} 
+	
+	public void überprüfeAktivierbarkeit() {
+		Map<Transition, Boolean> aktivierbarkeit = new HashMap<>();
+		
+		for (Transition transition: Transitionen.values()) {
+			aktivierbarkeit.put(transition, true);
+		}
+		
+		for (PetrinetzKante kante : Kanten.values()) {
+	        if (kante.stelleIstQuelle()) {
+	            if (kante.getStelle().getMarkenzahl() <= 0) {
+	                aktivierbarkeit.put(kante.getTransition(), false);
+	            }
+	        }
+	    }
+		
+		 for (Map.Entry<Transition, Boolean> entry : aktivierbarkeit.entrySet()) {
+		        if (entry.getValue()) {
+		            entry.getKey().aktiviere();
+		        } else {
+		            entry.getKey().deaktiviere();
+		        }
+		 }
+	}
+	public void setzeAnfangsmarkierung() {
+		for (Stelle stelle: Stellen.values()) {
+			stelle.setzeAnfangsmarkierung();
+		}
+	}
+	
+	public void zuruckzurAnfangsmarkierung() {
+		for (Stelle stelle: Stellen.values()) {
+			stelle.zuruckzurAnfangsmarkierung();
+		}
+		pEG.zuruckzurAnfangsmarkierung();
+	}
+	
+	public String EGKnotenName() {
+		List<String> stellenIDs = new ArrayList<String> (Stellen.keySet());
+		Collections.sort(stellenIDs);
+		String id = "(" + Stellen.get(stellenIDs.get(0)).getMarkenzahl();
+		if (stellenIDs.size()>1) {
+			for (int i = 1; i<stellenIDs.size(); i++) {
+				id = id + "|" +  Stellen.get(stellenIDs.get(i)).getMarkenzahl();
+			}
+		}
+		id = id + ")";
+		return id;
+	}
+	public void setzeErstenEGKnoten() {
+		this.pEG = new pEG();
+		EGKnoten egKnoten = new EGKnoten(EGKnotenName());
+		egKnoten.setName(EGKnotenName());
+		pEG.setAktuelleMarkierung(egKnoten);
+		pEG.setAnfangsKnoten(egKnoten);
+		pEG.addKnoten(egKnoten);
+	}
+	
+	public void setzeBestimmteMarkierung (String markierung) {
+		markierung = markierung.replaceAll("\\(","");
+		markierung = markierung.replaceAll("\\|", "");
+		String [] markierungarray = markierung.split("");
+		List<String> stellenIDs = new ArrayList<String> (Stellen.keySet());
+		Collections.sort(stellenIDs);
+		for(int i = 0; i< stellenIDs.size(); i++) {
+			Stellen.get(stellenIDs.get(i)).setMarkenzahl(Integer.parseInt(markierungarray[i]));
+		}
+	}
+}

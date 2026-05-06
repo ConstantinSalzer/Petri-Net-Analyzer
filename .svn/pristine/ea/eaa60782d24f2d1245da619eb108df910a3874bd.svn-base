@@ -1,0 +1,79 @@
+package GUI;
+
+import org.graphstream.graph.Edge;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.ui.spriteManager.Sprite;
+import org.graphstream.ui.spriteManager.SpriteManager;
+
+import datenstruktur.EGKante;
+import datenstruktur.EGKnoten;
+import datenstruktur.pEG;
+
+public class ErreichbarkeitsGraf extends MultiGraph{
+	
+	private static String CSS_FILE = "url(" + PetriGraf.class.getResource("/graph.css") + ")";
+	private pEG peg;
+	private SpriteManager spriteMan;
+	private Node markierterKnoten;
+	
+	public ErreichbarkeitsGraf(pEG peg) {
+		super("pEG");
+		spriteMan = new SpriteManager(this);
+		this.peg = peg;
+		this.setAttribute("ui.stylesheet", CSS_FILE);
+	}
+	void initilisiere() {
+		Node node = this.addNode(peg.anfangsKnoten.getId());
+		node.setAttribute("ui.class", "markierterAnfangsKnotenEG");
+		markierterKnoten = node;
+		node.setAttribute("ui.label", peg.anfangsKnoten.getName());
+	}
+	
+	void updateGraf(String transition, String aktuelleMarkierung, boolean knotenKantenMarkierung) {
+		for (EGKnoten knoten: peg.egKnoten.values()) {
+			if (this.getNode(knoten.getId())== null) {
+				Node node = this.addNode(knoten.getId());
+				node.setAttribute("ui.label", knoten.getName());
+			}
+		}
+		for (EGKante kante: peg.egKanten.values()) {
+			if (this.getEdge(kante.getId())== null) {
+				Edge edge = this.addEdge(kante.getId(), this.getNode(kante.getQuellID()),this.getNode(kante.getZielID()), true);
+				Sprite sprite = spriteMan.addSprite(kante.getId());
+				sprite.attachToEdge(edge.getId());
+				sprite.setPosition(0.5);
+				sprite.setAttribute("ui.class", "edgeLabel");
+				sprite.setAttribute("ui.label", kante.getKantenBeschriftung());
+			}
+		}
+		if (knotenKantenMarkierung) {
+			this.markiereKnoten(aktuelleMarkierung);
+			
+			this.edges().forEach(edge -> {
+				if (edge.getId().contains(transition) && edge.getId().endsWith(aktuelleMarkierung)) {
+					this.getEdge(edge.getId()).setAttribute("ui.class", "fett");
+				}
+			});
+		} 
+	}
+	
+	void markiereKnoten(String id) {
+		if(markierterKnoten.getId().equals(peg.anfangsKnoten.getId())) {
+			markierterKnoten.setAttribute("ui.class", "anfangsKnotenEG");
+		} else {
+			markierterKnoten.setAttribute("ui.class", "node");
+		}
+		if(id.equals(peg.anfangsKnoten.getId())) {
+			this.getNode(id).setAttribute("ui.class", "markierterAnfangsKnotenEG");
+		} else {
+			this.getNode(id).setAttribute("ui.class", "markierterKnotenEG");
+		}
+		markierterKnoten = this.getNode(id);
+		
+
+		this.edges().forEach(edge -> {
+			this.getEdge(edge.getId()).setAttribute("ui.class", "edge");
+		}); 
+	}
+}

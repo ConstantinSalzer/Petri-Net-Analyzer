@@ -1,0 +1,28 @@
+package datenstruktur;
+
+public class EGKante extends Kante{
+	EGKnoten quelle;
+	EGKnoten ziel;
+	String name;
+	Transition transition;
+	
+	public EGKante(Transition transition, EGKnoten quelle, EGKnoten ziel) {
+		super (quelle.getId() + ziel.getId() + transition.getId());
+		this.transition = transition;
+		this.name = "[" + transition.getId() + "] " + transition.getName();
+		this.quelle=quelle;
+		this.ziel=ziel;
+	}
+	
+	public String getQuellID() {
+		return quelle.id;
+	}
+	
+	public String getZielID() {
+		return ziel.id;
+	}
+	
+	public String getKantenBeschriftung() {
+		return "[" + transition.getId() + "] " + transition.getName();
+	}
+}

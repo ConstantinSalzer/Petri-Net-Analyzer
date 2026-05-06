@@ -1,0 +1,298 @@
+package datenstruktur;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+
+/**
+ * Datenstruktur für partielle Erreichbarkeitsgraphen
+ */
+public class pEG {
+	
+	//Map aller Knoten
+	
+	private HashMap<String, EGKnoten> egKnoten;
+	
+	//Map aller Kanten
+	
+	private HashMap<String, EGKante> egKanten;
+	
+	//variable die die aktuelle Markierung die im partiellen Erreichbarkeitsgraphen und damit auch im Petrinetz referenziert
+	
+	private EGKnoten aktuelleMarkierung;
+	
+	//variable die den Anfangsknoten referenziert
+	
+	private EGKnoten anfangsKnoten;
+	
+	//variabel für den Knoten m
+	
+	private EGKnoten m;
+	
+	//variable für den Knoten m'
+	
+	private EGKnoten mm;
+	
+	//variable die den Pfad vom Anfangsknoten über m zu m' darstellt
+	
+	private List<String> pfadmmm;
+	
+	
+	/**
+	 * Konstruktor, der einen leeren partiellen Erreichbarkeitsgrafen erzeugt
+	 */
+	public pEG() {
+		this.egKnoten = new HashMap<String, EGKnoten>();
+		this.egKanten = new HashMap<String, EGKante>();
+	}
+	
+	
+	/**
+	 * Methode die eine neue aktuelle Markierung für den partiellen Erreichbarkeitsgrafen einstellt
+	 * @param aktuelleMarkierung
+	 * 		neue Markierung, die eingestellt werden soll
+	 */
+	public void setAktuelleMarkierung(EGKnoten aktuelleMarkierung) {
+		this.aktuelleMarkierung = aktuelleMarkierung;
+	}
+	
+	/**
+	 * Methode die die aktuelle Markierung zurückgibt
+	 * @return
+	 * 			gibt die aktuelle Markierung in Form eines EG-Knotens zurück
+	 */
+	public EGKnoten getAktuelleMarkierung() {
+		return aktuelleMarkierung;
+	}
+	
+	//Methode mit der der Anfangsknoten eingestellt wird
+	void setAnfangsKnoten(EGKnoten egKnoten) {
+		this.anfangsKnoten = egKnoten;
+	}
+	
+	/**
+	 * Methode die den Anfangsknoten zurückgibt
+	 * @return
+	 * 			gibt den Anfangsknoten in Form eines EG-Knotens zurück
+	 */
+	public EGKnoten getAnfangsKnoten() {
+		return anfangsKnoten;
+	}
+	
+	//Methode die den Knoten m setzt, falls das Petrinetz unbeschränkt ist
+	void setm(EGKnoten m) {
+		this.m=m;
+	}
+	
+	/**
+	 * Methode die den Knoten m zurückgibt
+	 * @return
+	 * 			gibt den Knoten m als EG-Knoten zurück
+	 */
+	public EGKnoten getm() {
+		return m;
+	}
+
+	//Methode die den Knoten m' setzt, falls das Petrinetz unbeschränkt ist
+	void setmm(EGKnoten mm) {
+		this.mm=mm;
+	}
+
+	/**
+	 * Methode die den Knoten m' zurückgibt
+	 * @return
+	 * 			gibt den Knoten m' als EG-Knoten zurück
+	 */
+	public EGKnoten getmm() {
+		return mm;
+	}
+	
+	/**
+	 * Methode, die die Knoten des partiellen Erreichbarkeitsgrafen zurückgibt
+	 * @return
+	 * 			gibt eine Hashmap mit allen EG-Knoten zurück
+	 */
+	public HashMap<String,EGKnoten> getEGKnoten() {
+		return egKnoten;
+	}
+	
+	/**
+	 * Methode, die die Kanten des partiellen Erreichbarkeitsgrafen zurückgibt
+	 * @return
+	 * 			gibt eine Hashmap mit allen EG-Kanten zurück
+	 */	
+	public HashMap<String, EGKante> getEGKanten() {
+		return egKanten;
+	}
+	
+	/**
+	 * Methode die den Pfad zwischen vom Anfangsknoten über m nach m' zurückgibt
+	 * @return
+	 * 			gibt den Pfad in Form einer Liste mit den Knoten-IDs zurück
+	 */
+	public List<String> getPfad() {
+		return pfadmmm;
+	}
+	
+	//Methode zum hinzufügen von Knoten
+
+	void addKnoten(EGKnoten egKnoten) {
+		this.egKnoten.put(egKnoten.getId(), egKnoten);
+	}
+	
+	//Methode zum hinzufügen von Kanten
+	
+	void addKante (EGKante egKante) {
+		this.egKanten.put(egKante.getId(), egKante);
+	}
+	
+	//Methode, die anhand von der alten und neuen Markierung und der Transition die geschalten wurde den partiellen Erreichbarkeitsgraph aktualisiert
+	
+	void update(EGKnoten knoten, String Markierung, Transition transition) {
+		
+		//überprüft, ob die erreichte Markierung im partiellen Erreichbarkeitsgraphen enthalten ist
+		
+		if (!this.egKnoten.containsKey(Markierung)) {
+			
+			//erstellt einen neuen Knoten, fügt ihn samt dazugehöriger Kante zum partiellen Erreichbarkeitsgrafen hinzu und aktualisiert die aktuelle markierung
+			EGKnoten neuerKnoten = new EGKnoten(Markierung);
+			this.addKnoten(neuerKnoten);
+			this.addKante(new EGKante(transition, knoten, neuerKnoten));
+			this.aktuelleMarkierung = neuerKnoten;
+		
+		//auch wenn kein neuer Knoten hinzugefügt wird muss die aktuelle Markierung aktualisiert werden
+		} else {
+			this.aktuelleMarkierung = this.egKnoten.get(Markierung);
+			
+			//hier wird überprüft, ob eine neue Kante zum partiellen Erreichbarkeitsgrafen hinzugefügt werden muss
+		}if (!this.egKanten.containsKey(knoten.getName()+Markierung)){
+			this.addKante(new EGKante(transition, knoten, egKnoten.get(Markierung)));
+		} else if (!(this.egKanten.get(knoten.getName()+Markierung).getTransition().equals(transition))){
+			this.addKante(new EGKante(transition, knoten, egKnoten.get(Markierung)));
+		}
+	}
+	
+	//Methode um den partiellen Erreichbarkeitsgraphen zurück auf die Anfangsmarkierung setzt
+	void zuruckzurAnfangsmarkierung() {
+		this.aktuelleMarkierung = this.anfangsKnoten;
+	}
+	
+
+	
+	/**
+	 * Methode, die überprüft, ob zwei Knoten die bedingung für unbeschränktheit erfüllen oder nicht
+	 * @param m 
+	 * 			erster Knoten (im Falle der unbeschränktheit der Knoten m)
+	 * @param mm
+	 * 			zweiter Knoten (im Falle der unbeschränktheit der Knoten m')
+	 * @return
+	 * 			gibt zurück, ob die Knoten die bestimmungen für unbeschränktheit erfüllen oder nicht
+	 */
+	public boolean istUnbeschränkt (String m, String mm)  {
+		//zuerst wird überprüft, ob es für die Knoten m und m' für alle Stellen i und i' i=i' und mindestens für eine Stelle i<i' gilt
+		
+		//Knoten-Namen werden als integer arrays abgespeichert und durchlaufen
+		int[] x = Werkzeuge.getMarkierungAsInt(m);
+		int[] xx = Werkzeuge.getMarkierungAsInt(mm);
+		boolean wirklichwar = false;
+		for (int i = 0; i < x.length; i++) {
+			if (xx[i] < x[i]) {
+				return false;
+			}
+			if (xx[i] > x[i]) {
+				wirklichwar = true;
+			}
+		}
+		if (!wirklichwar) {
+			return false;
+		}
+		
+		//hier wird überprüft, ob ein Pfad vom Anfangsknoten über m nach m' existiert
+		
+		//variable für den endgültigen Pfad vom Anfangsknoten über m nach m' wird initialisiert
+		pfadmmm = new ArrayList<>();
+		
+		//Pfade vom Anfagsknoten nach m und von m nach m' werden gesucht und gespeichert
+		List<String> pfad1 = findePfad(this.anfangsKnoten.getId(), m);
+		List<String> pfad2 = findePfad(m, mm);
+		
+		//überprüfen, ob einer der Pfade leer ist, also der Knoten nicht von dem ersten Knoten aus erreichbar ist
+		if (pfad1 == null || pfad2 == null) {
+			return false;
+		}
+		
+		//Speicherung des gesamten Pfades vom Anfangsknoten über den Knoten m zum Knoten m' und der variablen für m und m'
+		this.setm(this.getEGKnoten().get(m));
+		this.setmm(this.getEGKnoten().get(mm));
+	
+		List<String> gesamterPfad = new ArrayList<>(pfad1);
+		pfad2.remove(0);
+		gesamterPfad.addAll(pfad2);
+		
+		//Algorithmus, mit der der Pfad in eine geeignete Form gebracht wird
+		for (int i = 0; i < gesamterPfad.size() - 1; i++) {
+	        String vonId = gesamterPfad.get(i);
+	        String nachId = gesamterPfad.get(i + 1);
+	        for (EGKante kante : egKanten.values()) {
+	            if (kante.getQuellID().equals(vonId) && kante.getZielID().equals(nachId)) {
+	                pfadmmm.add(kante.getId());
+	                break;
+	            }
+	        }
+	    }
+		return true;
+	}
+	
+	
+	/**
+	 * Methode, mit der ein Pfad zwischen zwei Knoten gesucht wird
+	 * @param von
+	 * 				Knoten von dem aus der Pfad losgehen soll
+	 * @param zu
+	 * 				Knoten zu dem der Pfad führen soll
+	 * @return
+	 * 			gibt eine String Liste mit allen Knoten-IDs auf dem Pfad zurück, falls ein Pfad existiert, sonst null
+	 */
+	public List<String> findePfad (String von, String zu) {
+		
+		//initialisierung der für die überprüfung benötigten Variablen
+		Stack<EGKnoten> stapel = new Stack<>();
+		Set<String> besucht = new HashSet<>();
+		Map<String, String> vorgaenger = new HashMap<>();
+		stapel.add(egKnoten.get(von));
+		besucht.add(von);
+		
+		
+		//Algorithmus zur Pfadsuche
+		while (!stapel.isEmpty()) {
+			EGKnoten aktuell = stapel.pop();
+			for (EGKante kante : egKanten.values()) {
+	            if (kante.getQuellID().equals(aktuell.getId())) {
+	                String zielId = kante.getZielID();
+	                if (!besucht.contains(zielId)) {
+	                    vorgaenger.put(zielId, aktuell.getId());
+	                    if (zielId.equals(zu)) {
+	                        List<String> pfad = new ArrayList<>();
+	                        String k = zu;
+	                        while (k != null) {
+	                            pfad.add(k);
+	                            k = vorgaenger.get(k);
+	                        }
+	                        Collections.reverse(pfad);
+	                        return pfad;
+	                    }
+	                    stapel.push(egKnoten.get(kante.getZielID()));
+	                    besucht.add(zielId);
+	                }
+	            }
+	        }
+	    }
+		return null;
+	}
+}

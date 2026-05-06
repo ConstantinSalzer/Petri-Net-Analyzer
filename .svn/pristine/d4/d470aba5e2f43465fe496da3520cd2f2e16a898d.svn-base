@@ -1,0 +1,34 @@
+package datenstruktur_Petrinetz;
+import java.util.HashMap;
+
+public class Transition {
+	String name;
+	String id;
+	Position position;
+	HashMap<String,Kante> eingehendeKanten;
+	HashMap<String,Kante> ausgehendeKanten;
+	
+	public Transition (String id) {
+		this.id = id;
+	}
+	
+	public String getId() {
+		return id;
+	}
+	
+	public String getName() {
+		return name;
+	}
+	
+	public Position getPosition() {
+		return position;
+	}
+	
+	void setName(String name) {
+		this.name= name;
+	}
+	
+	void setPosition (Position position) {
+		this.position = position;
+	}
+}

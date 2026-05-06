@@ -1,0 +1,7 @@
+public class Petrinets_3756556_Salzer_Constantin {
+
+	public static void main(String[] args) {
+		System.out.println("Hello World");
+	}
+
+}

@@ -1,0 +1,21 @@
+import java.util.List;
+
+public class Petrinetz {
+	List<Stelle> anfangsmarkierung;
+	
+	
+	class Stelle {
+		String name;
+		int markierung;
+		int xposition;
+		int yposition;
+	}
+	
+	class Transition {
+		String name;
+		int xposition;
+		int yposition;
+		List<Stelle> vorbereich;
+		List<Stelle> nachbereich;
+	}
+}

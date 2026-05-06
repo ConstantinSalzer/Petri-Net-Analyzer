@@ -1,0 +1,41 @@
+package datenstruktur;
+
+//Klasse die Kanten in Petrinetzen darstellt und dafür von normalen Kanten-Objekten erbt
+
+public class PetrinetzKante extends Kante{
+	
+	//variablen der Klasse
+	
+	private Stelle stelle;
+	private Transition transition;
+	private boolean stelleIstQuelle;
+	private boolean transitionIstQuelle;
+	
+	//Konstruktor der Klasse
+	
+	public PetrinetzKante (String id, Stelle stelle, Transition transition, boolean stelleIstQuelle) {
+		super(id);
+		this.stelle = stelle;
+		this.transition = transition;
+		this.stelleIstQuelle= stelleIstQuelle;
+		this.transitionIstQuelle = !stelleIstQuelle;
+	}
+	
+	//getter der Klasse
+	
+	public Stelle getStelle() {
+		return stelle;
+	}
+	
+	public Transition getTransition() {
+		return transition;
+	}
+	
+	public boolean stelleIstQuelle() {
+		return stelleIstQuelle;
+	}
+	
+	public boolean transitionIstQuelle() {
+		return transitionIstQuelle;
+	}
+}

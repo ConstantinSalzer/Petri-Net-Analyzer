@@ -1,0 +1,43 @@
+package datenstruktur_Petrinetz;
+import java.util.HashMap;
+
+public class Stelle {
+	String name;
+	String id;
+	int markenzahl;
+	Position position;
+	HashMap<String,Kante> eingehendeKanten;
+	HashMap<String,Kante> ausgehendeKanten;
+	
+	public Stelle (String id) {
+		this.id = id;
+	}
+	
+	public String getId () {
+		return id;
+	}
+			
+	void setName (String name) {
+		this.name = name;
+	}
+	
+	public String getName () {
+		return name;
+	}
+	
+	void setMarkenzahl(int markenzahl) {
+		this.markenzahl = markenzahl;
+	}
+	
+	public int getMarkenzahl () {
+		return markenzahl;
+	}
+	
+	void setPosition(Position position) {
+		this.position = position;
+	}
+	
+	public Position getPosition () {
+		return position;
+	}
+}

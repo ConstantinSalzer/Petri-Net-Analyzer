@@ -1,0 +1,80 @@
+package datenstruktur;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Stack;
+
+public class pEG {
+	public HashMap<String, EGKnoten> egKnoten;
+	public HashMap<String, EGKante> egKanten;
+	public EGKnoten aktuelleMarkierung;
+	public EGKnoten anfangsKnoten;
+	public EGKnoten m;
+	public EGKnoten mm;
+	
+	public pEG() {
+		this.egKnoten = new HashMap<String, EGKnoten>();
+		this.egKanten = new HashMap<String, EGKante>();
+	}
+	
+	void addKnoten(EGKnoten egKnoten) {
+		this.egKnoten.put(egKnoten.getId(), egKnoten);
+	}
+	
+	void addKante (EGKante egKante) {
+		this.egKanten.put(egKante.getId(), egKante);
+	}
+	
+	public void setAktuelleMarkierung(EGKnoten aktuelleMarkierung) {
+		this.aktuelleMarkierung = aktuelleMarkierung;
+	}
+	
+	void setAnfangsKnoten(EGKnoten egKnoten) {
+		this.anfangsKnoten = egKnoten;
+	}
+	
+	void update(EGKnoten knoten, String Markierung, Transition transition) {
+		if (!this.egKnoten.containsKey(Markierung)) {
+			EGKnoten neuerKnoten = new EGKnoten(Markierung);
+			this.addKnoten(neuerKnoten);
+			this.addKante(new EGKante(transition, knoten, neuerKnoten));
+			this.aktuelleMarkierung = neuerKnoten;
+		} else {
+			this.aktuelleMarkierung = this.egKnoten.get(Markierung);
+		}if (!this.egKanten.containsKey(knoten.getName()+Markierung)){
+			this.addKante(new EGKante(transition, knoten, egKnoten.get(Markierung)));
+		} else if (!(this.egKanten.get(knoten.getName()+Markierung).transition.equals(transition))){
+			this.addKante(new EGKante(transition, knoten, egKnoten.get(Markierung)));
+		}
+	}
+	
+	void zuruckzurAnfangsmarkierung() {
+		this.aktuelleMarkierung = this.anfangsKnoten;
+	}
+	
+
+	public boolean istErreichbar (String von, String zu) {
+		Stack<EGKnoten> Pfad = new Stack<>();
+		Set<String> besucht = new HashSet<>();
+		Pfad.add(egKnoten.get(von));
+		besucht.add(von);
+		while (!Pfad.isEmpty()) {
+			EGKnoten aktuell = Pfad.pop();
+			for (EGKante kante: egKanten.values()) {
+				if (kante.quelle.id.equals(aktuell.id)) {
+					if (kante.ziel.id.equals(zu)) {
+						return true;
+					}
+					if (!besucht.contains(kante.ziel.id)){
+						Pfad.add(kante.ziel);
+						besucht.add(kante.ziel.id);
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	
+}

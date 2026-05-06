@@ -1,0 +1,10 @@
+package exceptions;
+//Exception, falls bereits eine Stellt mit der selben ID existiert
+public class DoppelteStelleException extends RuntimeException{
+	private static final long serialVersionUID = 1L;
+
+	public DoppelteStelleException (String id) {
+		super("Stelle mit ID: " + id + " existiert bereits!");
+	}
+
+}

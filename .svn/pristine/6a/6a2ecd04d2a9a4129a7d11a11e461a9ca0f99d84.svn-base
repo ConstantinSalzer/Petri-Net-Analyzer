@@ -1,0 +1,10 @@
+datenstruktur für petrinetze resistenter machen
+
+bei egknoten kann man farbe, form und fett machen 
+
+Kanten bei EG noch unordentlich, manchmal mehr als eine,
+
+erkennt beschränktheit, aber EG erfindet er kanten
+
+
+für beschränktheitsanalyse: man nimmt die anfangsmarkierung und schaut, wie viele knoten schaltbar sind. dann nimmt man einen dieser knoten und schaltet ihn, alle anderen schreibt man auf eine liste. dann macht man das selbe so lange weiter mit der markierung, bis man nicht mehr schalten kann und keine transitionen mehr auf der liste stehen, oder bis das abbruchkriterium erreicht ist.
